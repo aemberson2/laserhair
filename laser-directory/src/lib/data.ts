@@ -236,6 +236,150 @@ export async function getAllCityParams(): Promise<
   }
 }
 
+export type ProviderFull = {
+  slug: string;
+  google_place_id: string;
+  name: string;
+  phone: string | null;
+  website: string | null;
+  address: string | null;
+  street: string | null;
+  city: string | null;
+  state: string | null;
+  state_code: string | null;
+  postal_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  timezone: string | null;
+  rating: number | null;
+  review_count: number | null;
+  reviews_1: number | null;
+  reviews_2: number | null;
+  reviews_3: number | null;
+  reviews_4: number | null;
+  reviews_5: number | null;
+  photo_url: string | null;
+  logo_url: string | null;
+  subtypes: string[] | null;
+  category: string | null;
+  business_status: string | null;
+  working_hours: unknown;
+  booking_url: string | null;
+  about: unknown;
+  is_verified: boolean | null;
+  is_laser_specialist: boolean | null;
+  google_maps_url: string | null;
+};
+
+export type ProviderPageData = {
+  state: { name: string; slug: string; code: string };
+  city: { name: string; slug: string };
+  provider: ProviderFull;
+  nearby: ProviderCardData[];
+};
+
+export async function getAllProviderParams(): Promise<
+  { stateSlug: string; citySlug: string; providerSlug: string }[]
+> {
+  try {
+    const supabase = getSupabase();
+    const [statesRes, citiesRes, providersRes] = await Promise.all([
+      supabase.from('states').select('code, slug'),
+      supabase.from('cities').select('name, slug, state_code'),
+      supabase.from('providers').select('slug, city, state_code'),
+    ]);
+    if (statesRes.error) throw statesRes.error;
+    if (citiesRes.error) throw citiesRes.error;
+    if (providersRes.error) throw providersRes.error;
+
+    const stateSlugByCode = new Map<string, string>();
+    for (const s of statesRes.data ?? []) stateSlugByCode.set(s.code, s.slug);
+
+    const citySlugByKey = new Map<string, string>();
+    for (const c of citiesRes.data ?? []) {
+      citySlugByKey.set(`${c.state_code}|${c.name.toLowerCase()}`, c.slug);
+    }
+
+    const params: { stateSlug: string; citySlug: string; providerSlug: string }[] = [];
+    for (const p of providersRes.data ?? []) {
+      if (!p.state_code || !p.city) continue;
+      const stateSlug = stateSlugByCode.get(p.state_code);
+      const citySlug = citySlugByKey.get(`${p.state_code}|${p.city.toLowerCase()}`);
+      if (!stateSlug || !citySlug) continue;
+      params.push({ stateSlug, citySlug, providerSlug: p.slug });
+    }
+    return params;
+  } catch (err) {
+    console.warn('getAllProviderParams failed, returning empty:', err);
+    return [];
+  }
+}
+
+export async function getProviderPageData(
+  stateSlug: string,
+  citySlug: string,
+  providerSlug: string,
+): Promise<ProviderPageData | null> {
+  try {
+    const supabase = getSupabase();
+    const { data: state, error: stateErr } = await supabase
+      .from('states')
+      .select('name, code, slug')
+      .eq('slug', stateSlug)
+      .maybeSingle();
+    if (stateErr) throw stateErr;
+    if (!state) return null;
+
+    const { data: city, error: cityErr } = await supabase
+      .from('cities')
+      .select('name, slug, state_code')
+      .eq('slug', citySlug)
+      .maybeSingle();
+    if (cityErr) throw cityErr;
+    if (!city || city.state_code !== state.code) return null;
+
+    const { data: provider, error: provErr } = await supabase
+      .from('providers')
+      .select('*')
+      .eq('slug', providerSlug)
+      .maybeSingle();
+    if (provErr) throw provErr;
+    if (!provider) return null;
+    if (
+      provider.state_code !== state.code ||
+      (provider.city ?? '').toLowerCase() !== city.name.toLowerCase()
+    ) {
+      return null;
+    }
+
+    const { data: nearbyRows, error: nearbyErr } = await supabase
+      .from('providers')
+      .select(
+        'slug, name, photo_url, address, phone, website, booking_url, rating, review_count, subtypes, is_verified, is_laser_specialist',
+      )
+      .eq('state_code', state.code)
+      .eq('city', city.name)
+      .neq('slug', provider.slug)
+      .order('rating', { ascending: false, nullsFirst: false })
+      .order('review_count', { ascending: false })
+      .limit(6);
+    if (nearbyErr) throw nearbyErr;
+
+    return {
+      state,
+      city: { name: city.name, slug: city.slug },
+      provider: provider as ProviderFull,
+      nearby: (nearbyRows ?? []) as ProviderCardData[],
+    };
+  } catch (err) {
+    console.warn(
+      `getProviderPageData(${stateSlug}/${citySlug}/${providerSlug}) failed:`,
+      err,
+    );
+    return null;
+  }
+}
+
 export async function getCityPageData(
   stateSlug: string,
   citySlug: string,
