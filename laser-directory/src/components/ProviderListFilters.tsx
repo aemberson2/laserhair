@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { ProviderCard, type ProviderCardData } from './ProviderCard';
 
 type Props = {
@@ -13,10 +13,20 @@ type Props = {
 type MinRating = 0 | 4 | 4.5;
 
 export function ProviderListFilters({ providers, categories, stateSlug, citySlug }: Props) {
-  const [minRating, setMinRating] = useState<MinRating>(0);
-  const [specialistOnly, setSpecialistOnly] = useState(false);
-  const [onlineBookingOnly, setOnlineBookingOnly] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  const [minRating, setMinRatingState] = useState<MinRating>(0);
+  const [specialistOnly, setSpecialistOnlyState] = useState(false);
+  const [onlineBookingOnly, setOnlineBookingOnlyState] = useState(false);
+  const [selectedCategories, setSelectedCategoriesState] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
+
+  const setMinRating = (v: MinRating) => startTransition(() => setMinRatingState(v));
+  const toggleSpecialist = () =>
+    startTransition(() => setSpecialistOnlyState((v) => !v));
+  const toggleOnlineBooking = () =>
+    startTransition(() => setOnlineBookingOnlyState((v) => !v));
+  const setSelectedCategories = (
+    updater: (prev: Set<string>) => Set<string>,
+  ) => startTransition(() => setSelectedCategoriesState(updater));
 
   const filtered = useMemo(() => {
     return providers.filter((p) => {
@@ -42,10 +52,12 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
   };
 
   const reset = () => {
-    setMinRating(0);
-    setSpecialistOnly(false);
-    setOnlineBookingOnly(false);
-    setSelectedCategories(new Set());
+    startTransition(() => {
+      setMinRatingState(0);
+      setSpecialistOnlyState(false);
+      setOnlineBookingOnlyState(false);
+      setSelectedCategoriesState(new Set());
+    });
   };
 
   const anyActive =
@@ -77,12 +89,12 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
           <ToggleButton
             label="Laser Specialists Only"
             active={specialistOnly}
-            onClick={() => setSpecialistOnly((v) => !v)}
+            onClick={toggleSpecialist}
           />
           <ToggleButton
             label="Online Booking Available"
             active={onlineBookingOnly}
-            onClick={() => setOnlineBookingOnly((v) => !v)}
+            onClick={toggleOnlineBooking}
           />
         </div>
 
@@ -125,19 +137,32 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
         </div>
       </div>
 
-      {filtered.length > 0 ? (
-        <ul className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filtered.map((p) => (
-            <li key={p.slug}>
-              <ProviderCard provider={p} href={`/${stateSlug}/${citySlug}/${p.slug}`} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-6 rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
-          No providers match these filters.
-        </p>
-      )}
+      <div
+        aria-busy={isPending}
+        aria-live="polite"
+        className={
+          isPending
+            ? 'pointer-events-none mt-4 opacity-60 transition-opacity'
+            : 'mt-4 transition-opacity'
+        }
+      >
+        {filtered.length > 0 ? (
+          <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {filtered.map((p) => (
+              <li key={p.slug}>
+                <ProviderCard
+                  provider={p}
+                  href={`/${stateSlug}/${citySlug}/${p.slug}`}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+            No providers match these filters.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

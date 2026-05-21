@@ -14,6 +14,8 @@ import {
   isOpenNow,
   parseWorkingHours,
 } from '@/lib/hours';
+import { getSiteUrl } from '@/lib/site';
+import Link from 'next/link';
 
 export const revalidate = 3600;
 
@@ -59,7 +61,9 @@ export default async function ProviderPage({
   const todayHours = hours.find((h) => h.day === today)?.text ?? null;
   const openState = isOpenNow(todayHours, provider.timezone);
   const aboutGroups = parseAbout(provider.about);
-  const localBusinessJsonLd = buildLocalBusinessJsonLd(provider);
+  const siteUrl = getSiteUrl();
+  const canonicalUrl = `${siteUrl}/${state.slug}/${city.slug}/${provider.slug}`;
+  const localBusinessJsonLd = buildLocalBusinessJsonLd(provider, canonicalUrl);
   const phoneDigits = provider.phone?.replace(/[^\d+]/g, '') ?? '';
 
   return (
@@ -67,6 +71,7 @@ export default async function ProviderPage({
       <JsonLd data={localBusinessJsonLd} />
 
       <Breadcrumb
+        baseUrl={siteUrl}
         items={[
           { label: 'Home', href: '/' },
           { label: state.name, href: `/${state.slug}` },
@@ -85,6 +90,13 @@ export default async function ProviderPage({
         <p className="mt-2 text-gray-600">
           Laser Hair Removal in {city.name}, {state.code}
         </p>
+        <Link
+          href={`/${state.slug}/${city.slug}`}
+          className="mt-3 inline-flex items-center text-sm text-teal-600 hover:underline"
+        >
+          <span aria-hidden="true" className="mr-1">&larr;</span>
+          Back to {city.name}
+        </Link>
       </header>
 
       <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -337,15 +349,17 @@ function ReviewBreakdown({ provider }: { provider: ProviderFull }) {
   );
 }
 
-function buildLocalBusinessJsonLd(provider: ProviderFull) {
+function buildLocalBusinessJsonLd(provider: ProviderFull, canonicalUrl: string) {
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
+    '@id': canonicalUrl,
     name: provider.name,
+    url: canonicalUrl,
   };
   if (provider.photo_url) jsonLd.image = provider.photo_url;
   if (provider.phone) jsonLd.telephone = provider.phone;
-  if (provider.website) jsonLd.url = provider.website;
+  if (provider.website) jsonLd.sameAs = [provider.website];
 
   const address: Record<string, string> = { '@type': 'PostalAddress' };
   if (provider.street) address.streetAddress = provider.street;

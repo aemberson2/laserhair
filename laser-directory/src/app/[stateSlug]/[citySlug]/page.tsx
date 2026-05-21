@@ -9,6 +9,7 @@ import {
   getCityPageData,
   type CityPageData,
 } from '@/lib/data';
+import { getSiteUrl } from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -108,6 +109,7 @@ export default async function CityPage({
       <JsonLd data={faqJsonLd} />
 
       <Breadcrumb
+        baseUrl={getSiteUrl()}
         items={[
           { label: 'Home', href: '/' },
           { label: state.name, href: `/${state.slug}` },

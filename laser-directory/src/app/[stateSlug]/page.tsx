@@ -9,6 +9,7 @@ import {
   getStatePageData,
   providerHref,
 } from '@/lib/data';
+import { getSiteUrl } from '@/lib/site';
 
 export const revalidate = 3600;
 
@@ -50,6 +51,7 @@ export default async function StatePage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Breadcrumb
+        baseUrl={getSiteUrl()}
         items={[
           { label: 'Home', href: '/' },
           { label: state.name, href: `/${state.slug}` },
