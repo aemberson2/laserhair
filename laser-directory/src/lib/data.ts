@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase';
+import type { ProviderCardData } from '@/components/ProviderCard';
 
 export type TopState = {
   name: string;
@@ -82,4 +83,123 @@ export async function getHomeData(): Promise<HomeData> {
     console.warn('getHomeData failed, returning empty data:', err);
     return EMPTY;
   }
+}
+
+export type StateRow = {
+  name: string;
+  code: string;
+  slug: string;
+  provider_count: number;
+  city_count: number;
+};
+
+export type CityListItem = {
+  name: string;
+  slug: string;
+  provider_count: number;
+  avg_rating: number | null;
+};
+
+export type TopProvider = ProviderCardData & { citySlug: string | null };
+
+export type StatePageData = {
+  state: StateRow;
+  cities: CityListItem[];
+  topProviders: TopProvider[];
+  avgRating: number | null;
+};
+
+export async function getAllStateSlugs(): Promise<string[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('states').select('slug');
+    if (error) throw error;
+    return (data ?? []).map((r) => r.slug);
+  } catch (err) {
+    console.warn('getAllStateSlugs failed, returning empty:', err);
+    return [];
+  }
+}
+
+export async function getStatePageData(slug: string): Promise<StatePageData | null> {
+  try {
+    const supabase = getSupabase();
+
+    const { data: state, error: stateErr } = await supabase
+      .from('states')
+      .select('name, code, slug, provider_count, city_count')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (stateErr) throw stateErr;
+    if (!state) return null;
+
+    const [citiesRes, ratingsRes, topProvidersRes] = await Promise.all([
+      supabase
+        .from('cities')
+        .select('name, slug, provider_count, avg_rating')
+        .eq('state_code', state.code)
+        .order('provider_count', { ascending: false }),
+      supabase.from('providers').select('rating').eq('state_code', state.code),
+      supabase
+        .from('providers')
+        .select(
+          'slug, name, photo_url, address, phone, website, booking_url, rating, review_count, subtypes, is_verified, is_laser_specialist, city',
+        )
+        .eq('state_code', state.code)
+        .not('rating', 'is', null)
+        .order('review_count', { ascending: false })
+        .limit(100),
+    ]);
+
+    if (citiesRes.error) throw citiesRes.error;
+    if (ratingsRes.error) throw ratingsRes.error;
+    if (topProvidersRes.error) throw topProvidersRes.error;
+
+    const ratings = (ratingsRes.data ?? [])
+      .map((r) => (typeof r.rating === 'number' ? r.rating : null))
+      .filter((r): r is number => r !== null);
+    const avgRating =
+      ratings.length > 0 ? ratings.reduce((s, r) => s + r, 0) / ratings.length : null;
+
+    const citySlugByName = new Map<string, string>();
+    for (const c of citiesRes.data ?? []) {
+      citySlugByName.set(c.name.toLowerCase(), c.slug);
+    }
+
+    const candidates = (topProvidersRes.data ?? []) as Array<
+      ProviderCardData & { city: string | null }
+    >;
+    const topProviders: TopProvider[] = candidates
+      .map((p) => ({
+        provider: p,
+        score: (p.rating ?? 0) * (p.review_count ?? 0),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(({ provider }) => {
+        const { city, ...rest } = provider;
+        return {
+          ...rest,
+          citySlug: city ? citySlugByName.get(city.toLowerCase()) ?? null : null,
+        };
+      });
+
+    return {
+      state,
+      cities: (citiesRes.data ?? []) as CityListItem[],
+      topProviders,
+      avgRating,
+    };
+  } catch (err) {
+    console.warn(`getStatePageData(${slug}) failed:`, err);
+    return null;
+  }
+}
+
+export function providerHref(
+  stateSlug: string,
+  citySlug: string,
+  providerSlug: string,
+): string {
+  return `/${stateSlug}/${citySlug}/${providerSlug}`;
 }
