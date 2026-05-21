@@ -203,3 +203,91 @@ export function providerHref(
 ): string {
   return `/${stateSlug}/${citySlug}/${providerSlug}`;
 }
+
+export type CityPageData = {
+  state: { name: string; slug: string; code: string };
+  city: { name: string; slug: string; state_code: string };
+  providers: ProviderCardData[];
+  nearbyCities: { name: string; slug: string; provider_count: number }[];
+};
+
+export async function getAllCityParams(): Promise<
+  { stateSlug: string; citySlug: string }[]
+> {
+  try {
+    const supabase = getSupabase();
+    const [statesRes, citiesRes] = await Promise.all([
+      supabase.from('states').select('code, slug'),
+      supabase.from('cities').select('slug, state_code'),
+    ]);
+    if (statesRes.error) throw statesRes.error;
+    if (citiesRes.error) throw citiesRes.error;
+    const stateSlugByCode = new Map<string, string>();
+    for (const s of statesRes.data ?? []) stateSlugByCode.set(s.code, s.slug);
+    return (citiesRes.data ?? [])
+      .map((c) => {
+        const stateSlug = stateSlugByCode.get(c.state_code);
+        return stateSlug ? { stateSlug, citySlug: c.slug } : null;
+      })
+      .filter((p): p is { stateSlug: string; citySlug: string } => p !== null);
+  } catch (err) {
+    console.warn('getAllCityParams failed, returning empty:', err);
+    return [];
+  }
+}
+
+export async function getCityPageData(
+  stateSlug: string,
+  citySlug: string,
+): Promise<CityPageData | null> {
+  try {
+    const supabase = getSupabase();
+    const { data: state, error: stateErr } = await supabase
+      .from('states')
+      .select('name, code, slug')
+      .eq('slug', stateSlug)
+      .maybeSingle();
+    if (stateErr) throw stateErr;
+    if (!state) return null;
+
+    const { data: city, error: cityErr } = await supabase
+      .from('cities')
+      .select('name, slug, state_code')
+      .eq('slug', citySlug)
+      .maybeSingle();
+    if (cityErr) throw cityErr;
+    if (!city || city.state_code !== state.code) return null;
+
+    const [providersRes, nearbyRes] = await Promise.all([
+      supabase
+        .from('providers')
+        .select(
+          'slug, name, photo_url, address, phone, website, booking_url, rating, review_count, subtypes, is_verified, is_laser_specialist',
+        )
+        .eq('state_code', state.code)
+        .eq('city', city.name)
+        .order('rating', { ascending: false, nullsFirst: false })
+        .order('review_count', { ascending: false }),
+      supabase
+        .from('cities')
+        .select('name, slug, provider_count')
+        .eq('state_code', state.code)
+        .neq('slug', city.slug)
+        .order('provider_count', { ascending: false })
+        .limit(5),
+    ]);
+
+    if (providersRes.error) throw providersRes.error;
+    if (nearbyRes.error) throw nearbyRes.error;
+
+    return {
+      state,
+      city,
+      providers: (providersRes.data ?? []) as ProviderCardData[],
+      nearbyCities: nearbyRes.data ?? [],
+    };
+  } catch (err) {
+    console.warn(`getCityPageData(${stateSlug}/${citySlug}) failed:`, err);
+    return null;
+  }
+}
