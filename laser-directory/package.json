@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "import-data": "npx tsx scripts/import-data.ts"
+    "import-data": "npx tsx scripts/import-data.ts",
+    "export-sitemap": "npx tsx scripts/export-sitemap.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
