@@ -37,7 +37,7 @@ A Next.js + Supabase directory site for laser hair removal providers across the 
    NEXT_PUBLIC_SITE_URL=https://your-domain.com
    ```
 
-   `NEXT_PUBLIC_SITE_URL` is the production origin used for absolute URLs in the sitemap, OG tags, and JSON-LD. In dev it falls back to `http://localhost:3000`.
+   `NEXT_PUBLIC_SITE_URL` is the production origin used for absolute URLs in the sitemap, OG tags, and JSON-LD. If unset, it falls back to `https://www.laserhairnearme.com` (see `src/lib/site.ts`).
 
 ## 2. Import data from the Outscraper export
 
