@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "import-data": "npx tsx scripts/import-data.ts",
+    "clean-data": "npx tsx scripts/clean-data.ts",
     "export-sitemap": "npx tsx scripts/export-sitemap.ts"
   },
   "dependencies": {
