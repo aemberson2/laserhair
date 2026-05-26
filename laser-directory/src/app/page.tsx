@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { CitySearchBox } from '@/components/CitySearchBox';
 import { JsonLd } from '@/components/JsonLd';
 import { StarRating } from '@/components/StarRating';
-import { getHomeData } from '@/lib/data';
+import { getAllCitiesForSearch, getHomeData } from '@/lib/data';
 
 export const revalidate = 3600;
 
@@ -40,7 +41,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const { totalProviders, totalCities, topStates, topCities } = await getHomeData();
+  const [{ totalProviders, totalCities, topStates, topCities }, searchCities] =
+    await Promise.all([getHomeData(), getAllCitiesForSearch()]);
 
   const faqJsonLd = {
     '@context': 'https://schema.org',
@@ -65,29 +67,7 @@ export default async function Home() {
           {totalCities.toLocaleString()} cities
         </p>
 
-        <form
-          action="/states"
-          method="get"
-          className="mx-auto mt-8 flex max-w-2xl flex-col gap-2 sm:flex-row"
-          aria-label="Search providers"
-        >
-          <label htmlFor="home-search" className="sr-only">
-            City or zip code
-          </label>
-          <input
-            id="home-search"
-            type="text"
-            name="q"
-            placeholder="Enter your city or zip code..."
-            className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
-          />
-          <Link
-            href="/states"
-            className="rounded-md bg-teal-600 px-6 py-3 text-center text-base font-medium text-white hover:bg-teal-700"
-          >
-            Browse by State
-          </Link>
-        </form>
+        <CitySearchBox cities={searchCities} />
       </section>
 
       {topStates.length > 0 && (

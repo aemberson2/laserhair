@@ -121,6 +121,64 @@ export async function getAllStateSlugs(): Promise<string[]> {
   }
 }
 
+export type StatesListItem = {
+  name: string;
+  code: string;
+  slug: string;
+  provider_count: number;
+  city_count: number;
+};
+
+export async function getAllStatesAlphabetical(): Promise<StatesListItem[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('states')
+      .select('name, code, slug, provider_count, city_count')
+      .order('name', { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as StatesListItem[];
+  } catch (err) {
+    console.warn('getAllStatesAlphabetical failed, returning empty:', err);
+    return [];
+  }
+}
+
+export type CitySearchEntry = {
+  name: string;
+  stateCode: string;
+  stateSlug: string;
+  citySlug: string;
+};
+
+export async function getAllCitiesForSearch(): Promise<CitySearchEntry[]> {
+  try {
+    const supabase = getSupabase();
+    const [statesRes, citiesRes] = await Promise.all([
+      supabase.from('states').select('code, slug'),
+      supabase
+        .from('cities')
+        .select('name, slug, state_code')
+        .order('provider_count', { ascending: false }),
+    ]);
+    if (statesRes.error) throw statesRes.error;
+    if (citiesRes.error) throw citiesRes.error;
+    const stateSlugByCode = new Map<string, string>();
+    for (const s of statesRes.data ?? []) stateSlugByCode.set(s.code, s.slug);
+    return (citiesRes.data ?? [])
+      .map((c): CitySearchEntry | null => {
+        const stateSlug = stateSlugByCode.get(c.state_code);
+        return stateSlug
+          ? { name: c.name, stateCode: c.state_code, stateSlug, citySlug: c.slug }
+          : null;
+      })
+      .filter((c): c is CitySearchEntry => c !== null);
+  } catch (err) {
+    console.warn('getAllCitiesForSearch failed, returning empty:', err);
+    return [];
+  }
+}
+
 export async function getStatePageData(slug: string): Promise<StatePageData | null> {
   try {
     const supabase = getSupabase();
