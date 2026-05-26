@@ -6,6 +6,7 @@ import {
   PhoneIcon,
   SparklesIcon,
 } from './Icons';
+import { QuoteButton } from './QuoteButton';
 import { StarRating } from './StarRating';
 
 export type ProviderCardData = {
@@ -37,7 +38,20 @@ function digitsOnly(phone: string): string {
   return phone.replace(/[^\d+]/g, '');
 }
 
-export function ProviderCard({ provider, href }: { provider: ProviderCardData; href: string }) {
+export type ProviderCardContext = {
+  city?: string;
+  stateCode?: string;
+};
+
+export function ProviderCard({
+  provider,
+  href,
+  context,
+}: {
+  provider: ProviderCardData;
+  href: string;
+  context?: ProviderCardContext;
+}) {
   const tags = (provider.subtypes ?? []).slice(0, 3);
   const phoneHref = provider.phone ? `tel:${digitsOnly(provider.phone)}` : null;
 
@@ -118,40 +132,45 @@ export function ProviderCard({ provider, href }: { provider: ProviderCardData; h
             </ul>
           )}
 
-          {(provider.booking_url || provider.website || phoneHref) && (
-            <div className="mt-1 flex flex-wrap gap-2">
-              {provider.booking_url && (
-                <a
-                  href={provider.booking_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
-                >
-                  Book Now
-                </a>
-              )}
-              {phoneHref && (
-                <a
-                  href={phoneHref}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 px-3.5 py-2 text-sm font-medium text-teal-700 transition duration-150 ease-out hover:bg-teal-50"
-                >
-                  <PhoneIcon className="h-4 w-4" />
-                  Call
-                </a>
-              )}
-              {provider.website && (
-                <a
-                  href={provider.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-medium text-slate-700 transition duration-150 ease-out hover:border-slate-400 hover:bg-slate-50"
-                >
-                  <GlobeIcon className="h-4 w-4" />
-                  Website
-                </a>
-              )}
-            </div>
-          )}
+          <div className="mt-1 flex flex-wrap gap-2">
+            <QuoteButton
+              variant="subtle"
+              providerName={provider.name}
+              providerSlug={provider.slug}
+              city={context?.city}
+              stateCode={context?.stateCode}
+            />
+            {provider.booking_url && (
+              <a
+                href={provider.booking_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
+              >
+                Book Now
+              </a>
+            )}
+            {phoneHref && (
+              <a
+                href={phoneHref}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 px-3.5 py-2 text-sm font-semibold text-teal-700 transition duration-150 ease-out hover:bg-teal-50"
+              >
+                <PhoneIcon className="h-4 w-4" />
+                Call
+              </a>
+            )}
+            {provider.website && (
+              <a
+                href={provider.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition duration-150 ease-out hover:border-slate-400 hover:bg-slate-50"
+              >
+                <GlobeIcon className="h-4 w-4" />
+                Website
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </article>

@@ -33,8 +33,9 @@ export function Footer() {
         </FooterColumn>
 
         <FooterColumn title="For Providers">
-          <FooterLink href="mailto:hello@laserhairnearme.com">Claim a Listing</FooterLink>
-          <FooterLink href="mailto:hello@laserhairnearme.com">Add Your Business</FooterLink>
+          <FooterLink href="/for-providers">Plans & Pricing</FooterLink>
+          <FooterLink href="/for-providers">Claim Your Listing</FooterLink>
+          <FooterLink href="/dashboard">Provider Dashboard</FooterLink>
           <FooterLink href="mailto:hello@laserhairnearme.com">Report an Error</FooterLink>
         </FooterColumn>
       </div>

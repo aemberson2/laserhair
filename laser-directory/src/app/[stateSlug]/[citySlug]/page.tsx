@@ -10,6 +10,7 @@ import {
 } from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderListFilters } from '@/components/ProviderListFilters';
+import { QuoteButton } from '@/components/QuoteButton';
 import { StickyMobileCTA } from '@/components/StickyMobileCTA';
 import { getPostsForCity } from '@/lib/blog';
 import {
@@ -150,12 +151,36 @@ export default async function CityPage({
         </div>
       </header>
 
+      <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center sm:rounded-2xl sm:border sm:border-teal-200 sm:bg-gradient-to-br sm:from-teal-50 sm:to-rose-50 sm:p-5">
+        <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-rose-50 p-5 sm:border-0 sm:bg-none sm:p-0">
+          <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">
+            Get matched
+          </p>
+          <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
+            Connect with top-rated providers in {city.name}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Tell us what you&apos;re looking for and we&apos;ll match you with vetted
+            clinics. Free, no obligation.
+          </p>
+        </div>
+        <QuoteButton
+          variant="primary"
+          label="Get a Free Quote"
+          city={city.name}
+          stateCode={state.code}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 sm:whitespace-nowrap"
+        />
+      </section>
+
       <section className="mt-8">
         <ProviderListFilters
           providers={providers}
           categories={categories}
           stateSlug={state.slug}
           citySlug={city.slug}
+          cityName={city.name}
+          stateCode={state.code}
         />
       </section>
 

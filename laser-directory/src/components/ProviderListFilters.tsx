@@ -8,11 +8,20 @@ type Props = {
   categories: string[];
   stateSlug: string;
   citySlug: string;
+  cityName: string;
+  stateCode: string;
 };
 
 type MinRating = 0 | 4 | 4.5;
 
-export function ProviderListFilters({ providers, categories, stateSlug, citySlug }: Props) {
+export function ProviderListFilters({
+  providers,
+  categories,
+  stateSlug,
+  citySlug,
+  cityName,
+  stateCode,
+}: Props) {
   const [minRating, setMinRatingState] = useState<MinRating>(0);
   const [specialistOnly, setSpecialistOnlyState] = useState(false);
   const [onlineBookingOnly, setOnlineBookingOnlyState] = useState(false);
@@ -135,6 +144,7 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
                 <ProviderCard
                   provider={p}
                   href={`/${stateSlug}/${citySlug}/${p.slug}`}
+                  context={{ city: cityName, stateCode }}
                 />
               </li>
             ))}

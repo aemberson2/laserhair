@@ -11,8 +11,10 @@ import {
   SparklesIcon,
   StarIcon,
 } from '@/components/Icons';
+import { ClaimListingButton } from '@/components/ClaimListingButton';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
+import { QuoteButton } from '@/components/QuoteButton';
 import { StarRating } from '@/components/StarRating';
 import {
   getAllProviderParams,
@@ -165,12 +167,21 @@ export default async function ProviderPage({
           />
 
           <div className="flex flex-col gap-2">
+            <QuoteButton
+              variant="primary"
+              label="Get a Free Quote"
+              providerName={provider.name}
+              providerSlug={provider.slug}
+              city={city.name}
+              stateCode={state.code}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+            />
             {provider.booking_url && (
               <a
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-teal-700"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 py-3 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
               >
                 Book Appointment
               </a>
@@ -178,7 +189,7 @@ export default async function ProviderPage({
             {phoneDigits && (
               <a
                 href={`tel:${phoneDigits}`}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 py-3 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
               >
                 <PhoneIcon className="h-4 w-4" />
                 Call Now
@@ -334,6 +345,28 @@ export default async function ProviderPage({
           <ReviewBreakdown provider={provider} />
         </section>
       )}
+
+      <section className="mt-12 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm sm:p-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-teal-300">
+              Are you a provider?
+            </p>
+            <h2 className="mt-1 text-xl font-bold sm:text-2xl">
+              Claim this listing
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Get featured placement, add photos, respond to inquiries, and
+              track your performance.
+            </p>
+          </div>
+          <ClaimListingButton
+            providerName={provider.name}
+            providerSlug={provider.slug}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:whitespace-nowrap"
+          />
+        </div>
+      </section>
 
       {nearby.length > 0 && (
         <section className="mt-12">
