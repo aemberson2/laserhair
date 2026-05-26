@@ -22,7 +22,15 @@ export type ProviderCardData = {
   subtypes: string[] | null;
   is_verified: boolean | null;
   is_laser_specialist: boolean | null;
+  /** Optional — when set, rendered as a distance pill (used on neighborhood pages). */
+  distance_miles?: number;
 };
+
+function formatDistance(miles: number): string {
+  if (miles < 0.1) return 'under 0.1 mi';
+  if (miles < 10) return `${miles.toFixed(1)} mi`;
+  return `${Math.round(miles)} mi`;
+}
 
 function initials(name: string): string {
   const words = name
@@ -85,6 +93,12 @@ export function ProviderCard({
               </Link>
             </h3>
             <div className="flex flex-wrap gap-1.5">
+              {typeof provider.distance_miles === 'number' && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                  <MapPinIcon className="h-3 w-3" />
+                  {formatDistance(provider.distance_miles)} away
+                </span>
+              )}
               {provider.is_laser_specialist && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-200">
                   <SparklesIcon className="h-3 w-3" />

@@ -16,6 +16,7 @@ import { getPostsForCity } from '@/lib/blog';
 import {
   getAllCityParams,
   getCityPageData,
+  getNeighborhoodsForCity,
   type CityPageData,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
@@ -82,6 +83,7 @@ export default async function CityPage({
   const categories = topCategories(providers);
   const top = providers[0];
   const cityBlogPosts = getPostsForCity(city.slug);
+  const neighborhoods = await getNeighborhoodsForCity(city.slug);
 
   const faqs: { q: string; a: string }[] = [
     {
@@ -214,6 +216,43 @@ export default async function CityPage({
           </p>
         </div>
       </section>
+
+      {neighborhoods.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Browse by Neighborhood
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Find laser hair removal providers near a specific area in {city.name}.
+          </p>
+          <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {neighborhoods.map((n) => (
+              <li key={n.slug}>
+                <Link
+                  href={`/${state.slug}/${city.slug}/near/${n.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-slate-900 group-hover:text-teal-700">
+                      {n.name}
+                    </p>
+                    {n.avg_rating !== null && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                        <StarIcon className="h-3 w-3" />
+                        {n.avg_rating.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {n.provider_count.toLocaleString()}{' '}
+                    {n.provider_count === 1 ? 'provider' : 'providers'} nearby
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-14">
         <div className="text-center">

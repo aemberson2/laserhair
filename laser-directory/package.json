@@ -9,6 +9,7 @@
     "lint": "eslint",
     "import-data": "npx tsx scripts/import-data.ts",
     "clean-data": "npx tsx scripts/clean-data.ts",
+    "seed-neighborhoods": "npx tsx scripts/seed-neighborhoods.ts",
     "export-sitemap": "npx tsx scripts/export-sitemap.ts"
   },
   "dependencies": {

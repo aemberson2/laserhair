@@ -1,6 +1,160 @@
 import { getSupabase } from './supabase';
 import type { ProviderCardData } from '@/components/ProviderCard';
 
+export type NeighborhoodRow = {
+  name: string;
+  slug: string;
+  city: string;
+  city_slug: string;
+  state_code: string;
+  state_slug: string;
+  latitude: number;
+  longitude: number;
+  radius_km: number;
+  provider_count: number;
+  avg_rating: number | null;
+};
+
+export type ProviderWithDistance = ProviderCardData & { distance_miles: number };
+
+export type NeighborhoodPageData = {
+  neighborhood: NeighborhoodRow;
+  providers: ProviderWithDistance[];
+  siblings: { name: string; slug: string; provider_count: number }[];
+};
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+export async function getAllNeighborhoodParams(): Promise<
+  { stateSlug: string; citySlug: string; neighborhoodSlug: string }[]
+> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('neighborhoods')
+      .select('slug, city_slug, state_slug');
+    if (error) throw error;
+    return (data ?? []).map((n) => ({
+      stateSlug: n.state_slug,
+      citySlug: n.city_slug,
+      neighborhoodSlug: n.slug,
+    }));
+  } catch (err) {
+    console.warn('getAllNeighborhoodParams failed, returning empty:', err);
+    return [];
+  }
+}
+
+export async function getNeighborhoodsForCity(
+  citySlug: string,
+): Promise<NeighborhoodRow[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('neighborhoods')
+      .select(
+        'name, slug, city, city_slug, state_code, state_slug, latitude, longitude, radius_km, provider_count, avg_rating',
+      )
+      .eq('city_slug', citySlug)
+      .order('provider_count', { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as NeighborhoodRow[];
+  } catch (err) {
+    console.warn(`getNeighborhoodsForCity(${citySlug}) failed:`, err);
+    return [];
+  }
+}
+
+export async function getNeighborhoodPageData(
+  stateSlug: string,
+  citySlug: string,
+  neighborhoodSlug: string,
+): Promise<NeighborhoodPageData | null> {
+  try {
+    const supabase = getSupabase();
+    const { data: hood, error: hoodErr } = await supabase
+      .from('neighborhoods')
+      .select(
+        'name, slug, city, city_slug, state_code, state_slug, latitude, longitude, radius_km, provider_count, avg_rating',
+      )
+      .eq('slug', neighborhoodSlug)
+      .maybeSingle();
+    if (hoodErr) throw hoodErr;
+    if (!hood) return null;
+    if (hood.state_slug !== stateSlug || hood.city_slug !== citySlug) return null;
+
+    // Bounding box query for providers around the neighborhood center
+    const latDelta = hood.radius_km / 111;
+    const lngDelta =
+      hood.radius_km / (111 * Math.max(0.01, Math.cos((hood.latitude * Math.PI) / 180)));
+
+    const { data: candidates, error: provErr } = await supabase
+      .from('providers')
+      .select(
+        'slug, name, photo_url, address, phone, website, booking_url, rating, review_count, subtypes, is_verified, is_laser_specialist, latitude, longitude',
+      )
+      .gte('latitude', hood.latitude - latDelta)
+      .lte('latitude', hood.latitude + latDelta)
+      .gte('longitude', hood.longitude - lngDelta)
+      .lte('longitude', hood.longitude + lngDelta)
+      .limit(2000);
+    if (provErr) throw provErr;
+
+    const providers: ProviderWithDistance[] = (candidates ?? [])
+      .map((p): ProviderWithDistance | null => {
+        if (p.latitude === null || p.longitude === null) return null;
+        const km = haversineKm(hood.latitude, hood.longitude, p.latitude, p.longitude);
+        if (km > hood.radius_km) return null;
+        return {
+          slug: p.slug,
+          name: p.name,
+          photo_url: p.photo_url,
+          address: p.address,
+          phone: p.phone,
+          website: p.website,
+          booking_url: p.booking_url,
+          rating: p.rating,
+          review_count: p.review_count,
+          subtypes: p.subtypes,
+          is_verified: p.is_verified,
+          is_laser_specialist: p.is_laser_specialist,
+          distance_miles: km * 0.621371,
+        };
+      })
+      .filter((p): p is ProviderWithDistance => p !== null)
+      .sort((a, b) => a.distance_miles - b.distance_miles);
+
+    const { data: siblings } = await supabase
+      .from('neighborhoods')
+      .select('name, slug, provider_count')
+      .eq('city_slug', citySlug)
+      .neq('slug', hood.slug)
+      .order('provider_count', { ascending: false })
+      .limit(8);
+
+    return {
+      neighborhood: hood as NeighborhoodRow,
+      providers,
+      siblings: (siblings ?? []) as { name: string; slug: string; provider_count: number }[],
+    };
+  } catch (err) {
+    console.warn(
+      `getNeighborhoodPageData(${stateSlug}/${citySlug}/${neighborhoodSlug}) failed:`,
+      err,
+    );
+    return null;
+  }
+}
+
 export type TopState = {
   name: string;
   slug: string;

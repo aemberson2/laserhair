@@ -1,16 +1,22 @@
 import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
-import { getAllCityParams, getAllProviderParams, getAllStateSlugs } from '@/lib/data';
+import {
+  getAllCityParams,
+  getAllNeighborhoodParams,
+  getAllProviderParams,
+  getAllStateSlugs,
+} from '@/lib/data';
 
 const BASE_URL = 'https://www.laserhairnearme.com';
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [stateSlugs, cityParams, providerParams] = await Promise.all([
+  const [stateSlugs, cityParams, providerParams, neighborhoodParams] = await Promise.all([
     getAllStateSlugs(),
     getAllCityParams(),
     getAllProviderParams(),
+    getAllNeighborhoodParams(),
   ]);
   const posts = getAllPosts();
 
@@ -64,6 +70,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE_URL}/${stateSlug}/${citySlug}`,
       changeFrequency: 'weekly',
       priority: 0.9,
+    });
+  }
+
+  for (const { stateSlug, citySlug, neighborhoodSlug } of neighborhoodParams) {
+    entries.push({
+      url: `${BASE_URL}/${stateSlug}/${citySlug}/near/${neighborhoodSlug}`,
+      changeFrequency: 'weekly',
+      priority: 0.85,
     });
   }
 
