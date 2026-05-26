@@ -1,6 +1,16 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import {
+  CheckBadgeIcon,
+  ClockIcon,
+  GlobeIcon,
+  MapPinIcon,
+  PhoneIcon,
+  SparklesIcon,
+  StarIcon,
+} from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
 import { StarRating } from '@/components/StarRating';
@@ -15,7 +25,6 @@ import {
   parseWorkingHours,
 } from '@/lib/hours';
 import { getSiteUrl } from '@/lib/site';
-import Link from 'next/link';
 
 export const revalidate = 3600;
 
@@ -43,8 +52,15 @@ export async function generateMetadata({
   };
 }
 
-const PHOTO_PLACEHOLDER =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 240'><rect width='400' height='240' fill='%23f3f4f6'/><path d='M150 170c0-25 22-44 50-44s50 19 50 44M200 116a26 26 0 100-52 26 26 0 000 52z' fill='%239ca3af'/></svg>";
+function initials(name: string): string {
+  const words = name
+    .replace(/[^a-zA-Z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length === 0) return '?';
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
 
 export default async function ProviderPage({
   params,
@@ -67,7 +83,7 @@ export default async function ProviderPage({
   const phoneDigits = provider.phone?.replace(/[^\d+]/g, '') ?? '';
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <JsonLd data={localBusinessJsonLd} />
 
       <Breadcrumb
@@ -83,16 +99,42 @@ export default async function ProviderPage({
         ]}
       />
 
-      <header className="mt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <header className="mt-5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {provider.is_laser_specialist && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-200">
+              <SparklesIcon className="h-3 w-3" />
+              Laser Specialist
+            </span>
+          )}
+          {provider.is_verified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+              <CheckBadgeIcon className="h-3 w-3" />
+              Verified
+            </span>
+          )}
+          {openState === 'open' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Open now
+            </span>
+          )}
+          {openState === 'closed' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+              Closed now
+            </span>
+          )}
+        </div>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           {provider.name}
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-slate-600">
           Laser Hair Removal in {city.name}, {state.code}
         </p>
         <Link
           href={`/${state.slug}/${city.slug}`}
-          className="mt-3 inline-flex items-center text-sm text-teal-600 hover:underline"
+          className="mt-3 inline-flex items-center text-sm font-medium text-teal-700 transition hover:text-teal-800"
         >
           <span aria-hidden="true" className="mr-1">&larr;</span>
           Back to {city.name}
@@ -100,52 +142,35 @@ export default async function ProviderPage({
       </header>
 
       <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={provider.photo_url ?? PHOTO_PLACEHOLDER}
-            alt={`${provider.name} photo`}
-            className="aspect-[5/3] w-full rounded-lg object-cover"
-          />
-        </div>
-        <aside className="rounded-lg border border-gray-200 bg-white p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            {provider.is_laser_specialist && (
-              <span className="rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-800">
-                Laser Specialist
-              </span>
-            )}
-            {provider.is_verified && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                Verified
-              </span>
-            )}
-            {openState === 'open' && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                Open now
-              </span>
-            )}
-            {openState === 'closed' && (
-              <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
-                Closed now
-              </span>
-            )}
-          </div>
-
-          <div className="mt-3">
-            <StarRating
-              rating={provider.rating}
-              reviewCount={provider.review_count}
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-teal-50 to-rose-50 shadow-sm lg:col-span-2">
+          {provider.photo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={provider.photo_url}
+              alt={`${provider.name} photo`}
+              className="aspect-[5/3] w-full object-cover"
             />
-          </div>
+          ) : (
+            <div className="flex aspect-[5/3] w-full items-center justify-center text-6xl font-semibold text-teal-700">
+              {initials(provider.name)}
+            </div>
+          )}
+        </div>
 
-          <div className="mt-5 flex flex-col gap-2">
+        <aside className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <StarRating
+            rating={provider.rating}
+            reviewCount={provider.review_count}
+            size="md"
+          />
+
+          <div className="flex flex-col gap-2">
             {provider.booking_url && (
               <a
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md bg-teal-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-700"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition duration-150 hover:bg-teal-700"
               >
                 Book Appointment
               </a>
@@ -153,8 +178,9 @@ export default async function ProviderPage({
             {phoneDigits && (
               <a
                 href={`tel:${phoneDigits}`}
-                className="rounded-md border border-teal-600 px-4 py-2.5 text-center text-sm font-medium text-teal-700 hover:bg-teal-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 py-3 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
               >
+                <PhoneIcon className="h-4 w-4" />
                 Call Now
               </a>
             )}
@@ -163,8 +189,9 @@ export default async function ProviderPage({
                 href={provider.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md border border-gray-300 px-4 py-2.5 text-center text-sm font-medium text-gray-700 hover:border-gray-400"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
               >
+                <GlobeIcon className="h-4 w-4" />
                 Visit Website
               </a>
             )}
@@ -173,83 +200,113 @@ export default async function ProviderPage({
       </section>
 
       <section className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-gray-900">Contact</h2>
-          <dl className="mt-3 space-y-2 text-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">Contact</h2>
+          <ul className="mt-4 space-y-3 text-sm">
             {provider.phone && (
-              <Row label="Phone">
+              <ContactRow icon={<PhoneIcon className="h-4 w-4" />}>
                 <a
                   href={`tel:${phoneDigits}`}
-                  className="text-teal-700 hover:underline"
+                  className="font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   {provider.phone}
                 </a>
-              </Row>
+              </ContactRow>
             )}
             {provider.website && (
-              <Row label="Website">
+              <ContactRow icon={<GlobeIcon className="h-4 w-4" />}>
                 <a
                   href={provider.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-teal-700 hover:underline"
+                  className="break-all font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   {provider.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                 </a>
-              </Row>
+              </ContactRow>
             )}
-            {provider.address && <Row label="Address">{provider.address}</Row>}
+            {provider.address && (
+              <ContactRow icon={<MapPinIcon className="h-4 w-4" />}>
+                <span className="text-slate-700">{provider.address}</span>
+              </ContactRow>
+            )}
             {provider.google_maps_url && (
-              <Row label="Map">
+              <ContactRow icon={<MapPinIcon className="h-4 w-4" />}>
                 <a
                   href={provider.google_maps_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-teal-700 hover:underline"
+                  className="font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   Open in Google Maps
                 </a>
-              </Row>
+              </ContactRow>
             )}
-          </dl>
+          </ul>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-gray-900">Hours</h2>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">Hours</h2>
+            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+              <ClockIcon className="h-3.5 w-3.5" />
+              {provider.timezone ?? 'Local time'}
+            </span>
+          </div>
           {hours.some((h) => h.text) ? (
-            <table className="mt-3 w-full text-sm">
-              <tbody>
+            <table className="mt-4 w-full text-sm">
+              <tbody className="divide-y divide-slate-100">
                 {hours.map((h) => {
                   const isToday = h.day === today;
+                  const isClosed = !h.text || /^closed$/i.test(h.text);
                   return (
-                    <tr key={h.day} className={isToday ? 'font-medium' : ''}>
-                      <td className="py-1 pr-4 text-gray-700">{h.day}</td>
-                      <td className="py-1 text-gray-900">{h.text || 'Closed'}</td>
+                    <tr
+                      key={h.day}
+                      className={
+                        isToday
+                          ? 'bg-teal-50/60 font-semibold text-slate-900'
+                          : 'text-slate-700'
+                      }
+                    >
+                      <td className="rounded-l-md py-2 pl-2 pr-4">
+                        {h.day}
+                        {isToday && (
+                          <span className="ml-1.5 text-xs font-medium text-teal-700">
+                            Today
+                          </span>
+                        )}
+                      </td>
+                      <td
+                        className={`rounded-r-md py-2 pr-2 text-right ${
+                          isClosed ? 'text-slate-400' : 'text-slate-900'
+                        }`}
+                      >
+                        {h.text || 'Closed'}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           ) : (
-            <p className="mt-3 text-sm text-gray-500">Hours not available.</p>
+            <p className="mt-3 text-sm text-slate-500">Hours not available.</p>
           )}
         </div>
       </section>
 
       {aboutGroups.length > 0 && (
-        <section className="mt-10 rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-gray-900">About</h2>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">About this provider</h2>
+          <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {aboutGroups.map((group) => (
               <div key={group.title}>
-                <h3 className="text-sm font-medium text-gray-900">{group.title}</h3>
-                <ul className="mt-2 space-y-1 text-sm text-gray-700">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  {group.title}
+                </h3>
+                <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
                   {group.items.map((item) => (
                     <li key={item} className="flex items-start gap-2">
-                      <span
-                        aria-hidden="true"
-                        className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-teal-600"
-                      />
+                      <CheckBadgeIcon className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -261,20 +318,32 @@ export default async function ProviderPage({
       )}
 
       {(provider.review_count ?? 0) > 0 && (
-        <section className="mt-10 rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-gray-900">Review Breakdown</h2>
+        <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-bold text-slate-900">Review breakdown</h2>
+            {provider.rating !== null && (
+              <p className="text-sm text-slate-600">
+                <span className="text-base font-semibold text-slate-900">
+                  {provider.rating.toFixed(1)}
+                </span>
+                {' / 5 from '}
+                {(provider.review_count ?? 0).toLocaleString()} reviews
+              </p>
+            )}
+          </div>
           <ReviewBreakdown provider={provider} />
         </section>
       )}
 
       {nearby.length > 0 && (
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-900">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Nearby Providers in {city.name}
           </h2>
-          <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* Horizontal scroll on mobile, grid on desktop */}
+          <ul className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0">
             {nearby.map((p) => (
-              <li key={p.slug}>
+              <li key={p.slug} className="w-[85%] shrink-0 snap-start sm:w-auto">
                 <ProviderCard
                   provider={p}
                   href={`/${state.slug}/${city.slug}/${p.slug}`}
@@ -288,12 +357,20 @@ export default async function ProviderPage({
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function ContactRow({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex gap-3">
-      <dt className="w-20 shrink-0 text-gray-500">{label}</dt>
-      <dd className="text-gray-900">{children}</dd>
-    </div>
+    <li className="flex items-start gap-3">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+        {icon}
+      </span>
+      <span className="flex-1 leading-relaxed">{children}</span>
+    </li>
   );
 }
 
@@ -326,20 +403,23 @@ function ReviewBreakdown({ provider }: { provider: ProviderFull }) {
   const total = buckets.reduce((s, b) => s + b.count, 0);
 
   return (
-    <div className="mt-3 space-y-2">
+    <div className="mt-5 space-y-2.5">
       {buckets.map(({ stars, count }) => {
         const widthPct = (count / max) * 100;
         const sharePct = total > 0 ? Math.round((count / total) * 100) : 0;
         return (
           <div key={stars} className="flex items-center gap-3 text-sm">
-            <span className="w-8 text-right text-gray-700">{stars}★</span>
-            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-100">
+            <span className="flex w-10 items-center justify-end gap-0.5 text-slate-700">
+              {stars}
+              <StarIcon className="h-3.5 w-3.5 text-amber-400" />
+            </span>
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-amber-500"
+                className="h-full rounded-full bg-gradient-to-r from-amber-300 to-amber-500 transition-all duration-300"
                 style={{ width: `${widthPct}%` }}
               />
             </div>
-            <span className="w-20 text-right tabular-nums text-gray-700">
+            <span className="w-20 text-right tabular-nums text-slate-500">
               {count.toLocaleString()} ({sharePct}%)
             </span>
           </div>

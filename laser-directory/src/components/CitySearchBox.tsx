@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CitySearchEntry } from '@/lib/data';
+import { SearchIcon } from './Icons';
 
 type Props = {
   cities: CitySearchEntry[];
@@ -65,12 +66,13 @@ export function CitySearchBox({ cities }: Props) {
   return (
     <div
       ref={containerRef}
-      className="mx-auto mt-8 flex max-w-2xl flex-col gap-2 sm:flex-row"
+      className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-3 sm:flex-row"
     >
       <div className="relative flex-1">
         <label htmlFor="home-search" className="sr-only">
           City or zip code
         </label>
+        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
         <input
           id="home-search"
           type="text"
@@ -84,17 +86,17 @@ export function CitySearchBox({ cities }: Props) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Enter your city or zip code..."
+          placeholder="Enter your city or zip code…"
           aria-autocomplete="list"
           aria-expanded={hasResults}
           aria-controls="city-search-listbox"
-          className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-base text-slate-900 shadow-sm placeholder:text-slate-400 transition duration-150 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
         />
         {hasResults && (
           <ul
             id="city-search-listbox"
             role="listbox"
-            className="absolute left-0 right-0 top-full z-10 mt-1 max-h-80 overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+            className="absolute left-0 right-0 top-full z-10 mt-2 max-h-80 overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
           >
             {suggestions.map((c, i) => (
               <li key={`${c.stateCode}-${c.citySlug}`} role="option" aria-selected={i === highlight}>
@@ -105,28 +107,28 @@ export function CitySearchBox({ cities }: Props) {
                     navigateTo(c);
                   }}
                   onMouseEnter={() => setHighlight(i)}
-                  className={`block w-full px-4 py-2 text-left text-sm ${
+                  className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                     i === highlight
                       ? 'bg-teal-50 text-teal-900'
-                      : 'text-gray-900 hover:bg-gray-50'
+                      : 'text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   <span className="font-medium">{c.name}</span>
-                  <span className="ml-2 text-gray-500">{c.stateCode}</span>
+                  <span className="ml-2 text-slate-500">{c.stateCode}</span>
                 </button>
               </li>
             ))}
           </ul>
         )}
         {noResults && (
-          <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-lg">
+          <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xl">
             No cities match &ldquo;{query}&rdquo;.
           </div>
         )}
       </div>
       <Link
         href="/states"
-        className="rounded-md bg-teal-600 px-6 py-3 text-center text-base font-medium text-white hover:bg-teal-700"
+        className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-6 py-3.5 text-center text-base font-medium text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
       >
         Browse by State
       </Link>

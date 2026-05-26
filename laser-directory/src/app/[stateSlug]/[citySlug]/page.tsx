@@ -2,8 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import {
+  CheckBadgeIcon,
+  PlusIcon,
+  StarIcon,
+} from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderListFilters } from '@/components/ProviderListFilters';
+import { StickyMobileCTA } from '@/components/StickyMobileCTA';
 import {
   getAllCityParams,
   getCityPageData,
@@ -71,7 +77,7 @@ export default async function CityPage({
   const bookingPct =
     providers.length > 0 ? Math.round((withBooking / providers.length) * 100) : 0;
   const categories = topCategories(providers);
-  const topName = providers[0]?.name;
+  const top = providers[0];
 
   const faqs: { q: string; a: string }[] = [
     {
@@ -84,8 +90,8 @@ export default async function CityPage({
     },
     {
       q: `What's the best laser hair removal clinic in ${city.name}?`,
-      a: topName
-        ? `Based on aggregated ratings and review volume, ${topName} ranks at the top of our directory for ${city.name}, ${state.code}. We recommend comparing the top-rated providers below, checking recent reviews, and booking a consultation before committing to a package.`
+      a: top
+        ? `Based on aggregated ratings and review volume, ${top.name} ranks at the top of our directory for ${city.name}, ${state.code}. We recommend comparing the top-rated providers below, checking recent reviews, and booking a consultation before committing to a package.`
         : `We don't have enough provider data for ${city.name} yet to highlight a specific clinic. Check the listings below and read recent reviews to find the right fit.`,
     },
     {
@@ -105,7 +111,7 @@ export default async function CityPage({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 pb-28 sm:py-10 lg:pb-10">
       <JsonLd data={faqJsonLd} />
 
       <Breadcrumb
@@ -117,26 +123,28 @@ export default async function CityPage({
         ]}
       />
 
-      <header className="mt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <header className="mt-5">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
           Best Laser Hair Removal in {city.name}, {state.code}
         </h1>
-        <p className="mt-3 text-gray-600">
-          {providers.length.toLocaleString()}{' '}
-          {providers.length === 1 ? 'provider' : 'providers'}
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 font-medium text-teal-700 ring-1 ring-inset ring-teal-200">
+            {providers.length.toLocaleString()}{' '}
+            {providers.length === 1 ? 'provider' : 'providers'}
+          </span>
           {avg !== null && (
-            <>
-              {' · '}
-              Average {avg.toFixed(1)} stars
-            </>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+              <StarIcon className="h-3.5 w-3.5" />
+              {avg.toFixed(1)} avg
+            </span>
           )}
           {providers.length > 0 && (
-            <>
-              {' · '}
-              {bookingPct}% have online booking
-            </>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+              <CheckBadgeIcon className="h-3.5 w-3.5" />
+              {bookingPct}% online booking
+            </span>
           )}
-        </p>
+        </div>
       </header>
 
       <section className="mt-8">
@@ -148,78 +156,92 @@ export default async function CityPage({
         />
       </section>
 
-      <section className="mt-12 rounded-lg bg-white p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-gray-900">
+      <section className="mt-14 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="text-xl font-bold text-slate-900">
           About Laser Hair Removal in {city.name}
         </h2>
-        <p className="mt-3 text-gray-700">
-          {city.name} has a growing market for laser hair removal, with{' '}
-          {providers.length.toLocaleString()}{' '}
-          {providers.length === 1 ? 'provider' : 'providers'} operating across med
-          spas, dermatology offices, and dedicated laser clinics. Whether you&apos;re
-          looking for a quick upper-lip treatment or a full-body package, comparing
-          providers on equipment, technician credentials, and recent reviews is the
-          best way to land on a clinic that fits your skin type and budget.
-        </p>
-        <p className="mt-3 text-gray-700">
-          The most effective lasers for hair removal vary by skin tone — Alexandrite
-          and Diode lasers work well for lighter skin, while Nd:YAG is generally
-          preferred for darker skin tones. Most reputable clinics in {city.name}{' '}
-          offer a free consultation and patch test, which is a good opportunity to
-          confirm the provider uses appropriate equipment for your specific
-          situation.
-        </p>
-        <p className="mt-3 text-gray-700">
-          Pricing in {city.name}, {state.code} tends to track regional norms.
-          Package deals for a full 6–8 session series almost always offer a
-          meaningful per-session discount versus paying à la carte, so ask about
-          package pricing during your consultation.
-        </p>
+        <div className="mt-3 space-y-3 text-slate-700">
+          <p>
+            {city.name} has a growing market for laser hair removal, with{' '}
+            {providers.length.toLocaleString()}{' '}
+            {providers.length === 1 ? 'provider' : 'providers'} operating across med
+            spas, dermatology offices, and dedicated laser clinics. Whether you&apos;re
+            looking for a quick upper-lip treatment or a full-body package, comparing
+            providers on equipment, technician credentials, and recent reviews is the
+            best way to land on a clinic that fits your skin type and budget.
+          </p>
+          <p>
+            The most effective lasers for hair removal vary by skin tone — Alexandrite
+            and Diode lasers work well for lighter skin, while Nd:YAG is generally
+            preferred for darker skin tones. Most reputable clinics in {city.name}{' '}
+            offer a free consultation and patch test, which is a good opportunity to
+            confirm the provider uses appropriate equipment for your specific
+            situation.
+          </p>
+          <p>
+            Pricing in {city.name}, {state.code} tends to track regional norms.
+            Package deals for a full 6–8 session series almost always offer a
+            meaningful per-session discount versus paying à la carte, so ask about
+            package pricing during your consultation.
+          </p>
+        </div>
       </section>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-semibold text-gray-900">
-          Frequently Asked Questions
-        </h2>
-        <div className="mt-4 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+      <section className="mt-14">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Frequently Asked Questions
+          </h2>
+        </div>
+        <div className="mx-auto mt-6 max-w-3xl divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {faqs.map((faq) => (
-            <details key={faq.q} className="group p-5">
-              <summary className="flex cursor-pointer items-center justify-between text-base font-medium text-gray-900 marker:hidden">
-                <span>{faq.q}</span>
+            <details key={faq.q} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 transition hover:bg-slate-50">
+                <span className="text-base font-medium text-slate-900">{faq.q}</span>
                 <span
                   aria-hidden="true"
-                  className="ml-4 text-teal-600 transition-transform group-open:rotate-45"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700 transition duration-150 group-open:rotate-45"
                 >
-                  +
+                  <PlusIcon className="h-4 w-4" />
                 </span>
               </summary>
-              <p className="mt-3 text-gray-700">{faq.a}</p>
+              <p className="px-6 pb-5 text-sm leading-relaxed text-slate-600">{faq.a}</p>
             </details>
           ))}
         </div>
       </section>
 
       {nearbyCities.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-900">
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Nearby Cities in {state.name}
           </h2>
-          <ul className="mt-4 flex flex-wrap gap-3">
+          <ul className="mt-4 flex flex-wrap gap-2">
             {nearbyCities.map((c) => (
               <li key={c.slug}>
                 <Link
                   href={`/${state.slug}/${c.slug}`}
-                  className="inline-block rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:border-teal-600 hover:text-teal-700"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-teal-300 hover:text-teal-700"
                 >
-                  {c.name}{' '}
-                  <span className="text-gray-500">
-                    ({c.provider_count.toLocaleString()})
+                  {c.name}
+                  <span className="text-slate-400">
+                    {c.provider_count.toLocaleString()}
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
         </section>
+      )}
+
+      {top && (
+        <StickyMobileCTA
+          name={top.name}
+          rating={top.rating}
+          bookingUrl={top.booking_url}
+          phone={top.phone}
+          href={`/${state.slug}/${city.slug}/${top.slug}`}
+        />
       )}
     </div>
   );

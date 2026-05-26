@@ -24,9 +24,8 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
     startTransition(() => setSpecialistOnlyState((v) => !v));
   const toggleOnlineBooking = () =>
     startTransition(() => setOnlineBookingOnlyState((v) => !v));
-  const setSelectedCategories = (
-    updater: (prev: Set<string>) => Set<string>,
-  ) => startTransition(() => setSelectedCategoriesState(updater));
+  const setSelectedCategories = (updater: (prev: Set<string>) => Set<string>) =>
+    startTransition(() => setSelectedCategoriesState(updater));
 
   const filtered = useMemo(() => {
     return providers.filter((p) => {
@@ -68,68 +67,51 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
 
   return (
     <div>
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <RatingButton
-            label="All ratings"
-            active={minRating === 0}
-            onClick={() => setMinRating(0)}
-          />
-          <RatingButton
-            label="4+ stars"
-            active={minRating === 4}
-            onClick={() => setMinRating(4)}
-          />
-          <RatingButton
-            label="4.5+ stars"
-            active={minRating === 4.5}
-            onClick={() => setMinRating(4.5)}
-          />
-          <span className="mx-2 hidden h-5 w-px bg-gray-300 sm:inline-block" />
-          <ToggleButton
+          <Pill label="All ratings" active={minRating === 0} onClick={() => setMinRating(0)} />
+          <Pill label="4+ stars" active={minRating === 4} onClick={() => setMinRating(4)} />
+          <Pill label="4.5+ stars" active={minRating === 4.5} onClick={() => setMinRating(4.5)} />
+          <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-slate-200 sm:inline-block" />
+          <Pill
             label="Laser Specialists Only"
             active={specialistOnly}
             onClick={toggleSpecialist}
           />
-          <ToggleButton
-            label="Online Booking Available"
+          <Pill
+            label="Online Booking"
             active={onlineBookingOnly}
             onClick={toggleOnlineBooking}
           />
         </div>
 
         {categories.length > 0 && (
-          <fieldset className="mt-4">
-            <legend className="text-sm font-medium text-gray-700">Categories</legend>
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+          <div className="mt-4">
+            <p className="text-sm font-medium text-slate-700">Categories</p>
+            <div className="mt-2 flex flex-wrap gap-2">
               {categories.map((cat) => (
-                <label
+                <Pill
                   key={cat}
-                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
-                    checked={selectedCategories.has(cat)}
-                    onChange={() => toggleCategory(cat)}
-                  />
-                  {cat}
-                </label>
+                  label={cat}
+                  active={selectedCategories.has(cat)}
+                  onClick={() => toggleCategory(cat)}
+                  size="sm"
+                />
               ))}
             </div>
-          </fieldset>
+          </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
           <span>
-            Showing {filtered.length} of {providers.length}{' '}
-            {providers.length === 1 ? 'provider' : 'providers'}
+            Showing <span className="font-semibold text-slate-900">{filtered.length}</span> of{' '}
+            {providers.length} {providers.length === 1 ? 'provider' : 'providers'}
           </span>
           {anyActive && (
             <button
               type="button"
               onClick={reset}
-              className="text-teal-600 hover:underline"
+              className="text-teal-700 transition hover:text-teal-800 hover:underline"
             >
               Reset filters
             </button>
@@ -142,8 +124,8 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
         aria-live="polite"
         className={
           isPending
-            ? 'pointer-events-none mt-4 opacity-60 transition-opacity'
-            : 'mt-4 transition-opacity'
+            ? 'pointer-events-none mt-6 opacity-60 transition-opacity duration-150'
+            : 'mt-6 transition-opacity duration-150'
         }
       >
         {filtered.length > 0 ? (
@@ -158,7 +140,7 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+          <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
             No providers match these filters.
           </p>
         )}
@@ -167,50 +149,28 @@ export function ProviderListFilters({ providers, categories, stateSlug, citySlug
   );
 }
 
-function RatingButton({
+function Pill({
   label,
   active,
   onClick,
+  size = 'md',
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
+  size?: 'sm' | 'md';
 }) {
+  const padding = size === 'sm' ? 'px-3 py-1' : 'px-3.5 py-1.5';
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={
+      className={`rounded-full ${padding} text-sm font-medium transition duration-150 ease-out ${
         active
-          ? 'rounded-full bg-teal-600 px-3 py-1.5 text-sm font-medium text-white'
-          : 'rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-teal-600 hover:text-teal-700'
-      }
-    >
-      {label}
-    </button>
-  );
-}
-
-function ToggleButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={
-        active
-          ? 'rounded-full bg-teal-600 px-3 py-1.5 text-sm font-medium text-white'
-          : 'rounded-full border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-teal-600 hover:text-teal-700'
-      }
+          ? 'bg-teal-600 text-white shadow-sm hover:bg-teal-700'
+          : 'border border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:text-teal-700'
+      }`}
     >
       {label}
     </button>
