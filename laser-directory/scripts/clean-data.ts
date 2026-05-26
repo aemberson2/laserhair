@@ -27,6 +27,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const EXECUTE = process.argv.includes('--execute');
+const REMOVE_UNHINTED = process.argv.includes('--remove-unhinted');
 
 if (!SUPABASE_URL) {
   console.error('Missing NEXT_PUBLIC_SUPABASE_URL in .env.local');
@@ -37,6 +38,11 @@ if (EXECUTE && !SERVICE_KEY) {
     '--execute requires SUPABASE_SERVICE_ROLE_KEY in .env.local (bypasses RLS for deletes/updates).',
   );
   process.exit(1);
+}
+if (REMOVE_UNHINTED && !EXECUTE) {
+  console.log(
+    'Note: --remove-unhinted has no effect without --execute. Showing dry-run preview of what it would remove.',
+  );
 }
 const KEY = SERVICE_KEY ?? ANON_KEY;
 if (!KEY) {
@@ -250,25 +256,42 @@ function sample<T>(arr: T[], n: number): T[] {
 }
 
 async function main() {
-  console.log(EXECUTE ? 'Mode: EXECUTE (will delete and recompute)' : 'Mode: DRY RUN (no changes)');
+  const flags = [
+    EXECUTE ? '--execute' : null,
+    REMOVE_UNHINTED ? '--remove-unhinted' : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  console.log(
+    EXECUTE
+      ? `Mode: EXECUTE${REMOVE_UNHINTED ? ' + REMOVE-UNHINTED' : ''} (${flags})`
+      : 'Mode: DRY RUN (no changes)',
+  );
   console.log('Fetching all providers…');
   const providers = await fetchAllProviders();
   console.log(`Total providers: ${providers.length}\n`);
 
   const keep: Provider[] = [];
   const remove: Provider[] = [];
-  const review: { p: Provider; hint?: string }[] = [];
+  const reviewHinted: { p: Provider; hint: string }[] = [];
+  const reviewUnhinted: Provider[] = [];
 
   for (const p of providers) {
     const { bucket, hint } = classify(p);
     if (bucket === 'KEEP') keep.push(p);
     else if (bucket === 'REMOVE') remove.push(p);
-    else review.push({ p, hint });
+    else if (hint) reviewHinted.push({ p, hint });
+    else reviewUnhinted.push(p);
   }
 
-  console.log(`KEEP:   ${keep.length} providers (have laser in subtypes or name)`);
-  console.log(`REMOVE: ${remove.length} providers (clearly unrelated categories)`);
-  console.log(`REVIEW: ${review.length} providers (might offer laser, needs verification)`);
+  const reviewTotal = reviewHinted.length + reviewUnhinted.length;
+  console.log(`KEEP:            ${keep.length} providers (have laser in subtypes or name)`);
+  console.log(`REMOVE:          ${remove.length} providers (clearly unrelated categories)`);
+  console.log(
+    `REVIEW (total):  ${reviewTotal} providers (might offer laser, needs verification)`,
+  );
+  console.log(`  with hint:     ${reviewHinted.length}  (laser/skin/derm/cosmetic/aesthetic)`);
+  console.log(`  unhinted:      ${reviewUnhinted.length}`);
   console.log('');
 
   console.log('--- KEEP samples ---');
@@ -276,39 +299,63 @@ async function main() {
   console.log('');
 
   console.log('--- REMOVE samples ---');
+  if (remove.length === 0) console.log('  (none)');
   for (const p of sample(remove, 10)) console.log(fmt(p));
   console.log('');
 
-  console.log('--- REVIEW samples (name [category] (hint) website) ---');
-  for (const { p, hint } of sample(review, 10)) console.log(fmtReview(p, hint));
+  console.log('--- REVIEW (hinted) samples — would be KEPT ---');
+  for (const { p, hint } of sample(reviewHinted, 10)) console.log(fmtReview(p, hint));
   console.log('');
 
-  // Extra breakdowns for REVIEW
-  const reviewWithSite = review.filter((r) => !!r.p.website);
-  const reviewWithHint = review.filter((r) => !!r.hint);
-  console.log(`REVIEW with website:           ${reviewWithSite.length}`);
-  console.log(`REVIEW with laser/skin hint:   ${reviewWithHint.length}`);
+  console.log('--- REVIEW (unhinted) samples — would be REMOVED with --remove-unhinted ---');
+  for (const p of sample(reviewUnhinted, 10)) console.log(fmtReview(p, undefined));
+  console.log('');
+
+  const reviewWithSite = [...reviewHinted.map((r) => r.p), ...reviewUnhinted].filter(
+    (p) => !!p.website,
+  );
+  console.log(`REVIEW with website:                    ${reviewWithSite.length}`);
+  console.log('');
+
+  // What this run would delete
+  const idsToDelete: string[] = [...remove.map((p) => p.id)];
+  if (REMOVE_UNHINTED) {
+    idsToDelete.push(...reviewUnhinted.map((p) => p.id));
+  }
+
+  console.log(
+    `This run would delete: ${idsToDelete.length} providers` +
+      (REMOVE_UNHINTED ? ' (REMOVE + unhinted REVIEW)' : ' (REMOVE only)'),
+  );
   console.log('');
 
   if (!EXECUTE) {
-    console.log('Dry run complete. Re-run with --execute to apply deletes and recompute aggregates.');
+    console.log(
+      'Dry run complete. To apply:\n' +
+        '  --execute                     deletes REMOVE bucket only\n' +
+        '  --execute --remove-unhinted   deletes REMOVE bucket + unhinted REVIEW',
+    );
     return;
   }
 
-  if (remove.length === 0) {
+  if (idsToDelete.length === 0) {
     console.log('Nothing to delete.');
     return;
   }
 
-  console.log(`Deleting ${remove.length} providers…`);
-  await deleteProviders(remove.map((p) => p.id));
+  console.log(`Deleting ${idsToDelete.length} providers…`);
+  await deleteProviders(idsToDelete);
 
   console.log('Recomputing city and state aggregates…');
   const { citiesUpdated, citiesDeleted, statesUpdated } = await recomputeAggregates();
 
   console.log('');
   console.log('Done.');
-  console.log(`  Providers deleted: ${remove.length}`);
+  console.log(`  Providers deleted: ${idsToDelete.length}`);
+  console.log(`    REMOVE bucket:   ${remove.length}`);
+  if (REMOVE_UNHINTED) {
+    console.log(`    unhinted REVIEW: ${reviewUnhinted.length}`);
+  }
   console.log(`  Cities updated:    ${citiesUpdated}`);
   console.log(`  Cities deleted:    ${citiesDeleted}`);
   console.log(`  States updated:    ${statesUpdated}`);
