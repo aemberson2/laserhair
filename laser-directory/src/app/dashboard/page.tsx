@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { ClaimListingButton } from '@/components/ClaimListingButton';
 import { SparklesIcon } from '@/components/Icons';
+import { getSiteUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Provider Dashboard',
@@ -11,7 +13,18 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-20 text-center">
+    <>
+      <div className="mx-auto max-w-2xl px-4 pt-8">
+        <Breadcrumb
+          baseUrl={getSiteUrl()}
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'For Providers', href: '/for-providers' },
+            { label: 'Dashboard', href: '/dashboard' },
+          ]}
+        />
+      </div>
+      <div className="mx-auto flex max-w-2xl flex-col items-center px-4 pb-20 pt-8 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-sm">
         <SparklesIcon className="h-6 w-6" />
       </div>
@@ -45,5 +58,6 @@ export default function DashboardPage() {
         </Link>
       </p>
     </div>
+    </>
   );
 }

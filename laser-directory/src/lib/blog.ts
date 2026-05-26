@@ -102,6 +102,22 @@ export function getPostsForCity(citySlug: string): Post[] {
   return getAllPosts().filter((p) => p.relatedCities.includes(citySlug));
 }
 
+export function getLatestPosts(limit: number): Post[] {
+  return getAllPosts().slice(0, limit);
+}
+
+// Pick relevant posts for a provider. Prefers posts whose relatedCities
+// include the provider's city; falls back to the most recent pillars.
+export function getPostsForProvider(citySlug: string | null, limit = 3): Post[] {
+  const matched = citySlug
+    ? getAllPosts().filter((p) => p.relatedCities.includes(citySlug))
+    : [];
+  if (matched.length >= limit) return matched.slice(0, limit);
+  const seen = new Set(matched.map((p) => p.slug));
+  const fillers = getAllPosts().filter((p) => !seen.has(p.slug));
+  return [...matched, ...fillers].slice(0, limit);
+}
+
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()

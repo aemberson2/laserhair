@@ -6,9 +6,11 @@ import { ChevronRightIcon, MapPinIcon, PlusIcon, StarIcon } from '@/components/I
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderListFilters } from '@/components/ProviderListFilters';
 import { QuoteButton } from '@/components/QuoteButton';
+import { getPostsForProvider } from '@/lib/blog';
 import {
   getAllNeighborhoodParams,
   getNeighborhoodPageData,
+  getSiblingCitiesByStateCode,
   type NeighborhoodPageData,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
@@ -68,6 +70,8 @@ export default async function NeighborhoodPage({
   const avg = avgRating(providers);
   const top = providers[0];
   const categories = topCategories(providers);
+  const otherCities = await getSiblingCitiesByStateCode(n.state_code, n.city_slug, 6);
+  const relatedPosts = getPostsForProvider(n.city_slug, 3);
 
   const faqs: { q: string; a: string }[] = [
     {
@@ -215,6 +219,58 @@ export default async function NeighborhoodPage({
                   </p>
                   <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-teal-700">
                     See providers
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {otherCities.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Other Cities in {n.state_code === 'DC' ? 'DC' : n.state_code}
+          </h2>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {otherCities.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  href={`/${n.state_slug}/${c.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-teal-300 hover:text-teal-700"
+                >
+                  {c.name}
+                  <span className="text-slate-400">
+                    {c.provider_count.toLocaleString()}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Related Articles
+          </h2>
+          <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {relatedPosts.map((post) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">
+                    {post.topic}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold leading-snug text-slate-900 group-hover:text-teal-700">
+                    {post.title}
+                  </h3>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-sm font-medium text-teal-700">
+                    Read article
                     <ChevronRightIcon className="h-4 w-4" />
                   </span>
                 </Link>

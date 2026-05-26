@@ -11,9 +11,12 @@ import { ProviderCard } from '@/components/ProviderCard';
 import {
   getAllStateSlugs,
   getStatePageData,
+  getStatesByCodes,
+  getTopStatesNationwide,
   providerHref,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
+import { NEIGHBORING_STATE_CODES } from '@/lib/states-adjacency';
 
 export const revalidate = 3600;
 
@@ -51,6 +54,18 @@ export default async function StatePage({
   if (!data) notFound();
 
   const { state, cities, topProviders, avgRating } = data;
+
+  const neighborCodes = NEIGHBORING_STATE_CODES[state.code] ?? [];
+  const [neighborStates, topStatesAll] = await Promise.all([
+    getStatesByCodes([...neighborCodes]),
+    getTopStatesNationwide(10),
+  ]);
+  // Preserve the adjacency-list order
+  const neighborOrder = new Map(neighborCodes.map((c, i) => [c, i]));
+  const neighbors = neighborStates
+    .slice()
+    .sort((a, b) => (neighborOrder.get(a.code) ?? 99) - (neighborOrder.get(b.code) ?? 99));
+  const topStates = topStatesAll.filter((s) => s.slug !== state.slug);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
@@ -148,6 +163,58 @@ export default async function StatePage({
                       : `/${state.slug}`
                   }
                 />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {neighbors.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Neighboring States
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Looking just over the border from {state.name}? Try these.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {neighbors.map((s) => (
+              <li key={s.code}>
+                <Link
+                  href={`/${s.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-teal-300 hover:text-teal-700"
+                >
+                  {s.name}
+                  <span className="text-slate-400">{s.code}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {topStates.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Top States for Laser Hair Removal
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            States with the most listed providers in our directory.
+          </p>
+          <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {topStates.map((s) => (
+              <li key={s.slug}>
+                <Link
+                  href={`/${s.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                >
+                  <p className="font-semibold text-slate-900 group-hover:text-teal-700">
+                    {s.name}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {s.provider_count.toLocaleString()} providers
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>

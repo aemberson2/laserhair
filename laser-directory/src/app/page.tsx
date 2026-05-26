@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CitySearchBox } from '@/components/CitySearchBox';
-import { CheckBadgeIcon, PlusIcon, StarIcon } from '@/components/Icons';
+import { CheckBadgeIcon, ChevronRightIcon, MapPinIcon, PlusIcon, StarIcon } from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
-import { getAllCitiesForSearch, getHomeData } from '@/lib/data';
+import { getLatestPosts } from '@/lib/blog';
+import {
+  getAllCitiesForSearch,
+  getFeaturedNeighborhoods,
+  getHomeData,
+  getTopCitiesNationwide,
+} from '@/lib/data';
 
 export const revalidate = 3600;
 
@@ -41,8 +47,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const [{ totalProviders, totalCities, topStates, topCities }, searchCities] =
-    await Promise.all([getHomeData(), getAllCitiesForSearch()]);
+  const [
+    { totalProviders, totalCities, topStates },
+    topCities,
+    featuredNeighborhoods,
+    searchCities,
+  ] = await Promise.all([
+    getHomeData(),
+    getTopCitiesNationwide(12),
+    getFeaturedNeighborhoods(6),
+    getAllCitiesForSearch(),
+  ]);
+  const latestPosts = getLatestPosts(3);
 
   const providersStr = totalProviders > 0 ? totalProviders.toLocaleString() : '2,200+';
   const citiesStr = totalCities > 0 ? totalCities.toLocaleString() : '300+';
@@ -134,9 +150,9 @@ export default async function Home() {
             </p>
             <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {topCities.map((city) => (
-                <li key={`${city.state_code}-${city.slug}`}>
+                <li key={`${city.state_code}-${city.city_slug}`}>
                   <Link
-                    href={`/${city.state_slug}/${city.slug}`}
+                    href={`/${city.state_slug}/${city.city_slug}`}
                     className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -156,6 +172,87 @@ export default async function Home() {
                     <p className="mt-2 text-sm text-slate-500">
                       {city.provider_count.toLocaleString()} providers
                     </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {featuredNeighborhoods.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                  Featured Neighborhoods
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Drill into a specific neighborhood for laser providers nearby.
+                </p>
+              </div>
+            </div>
+            <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredNeighborhoods.map((n) => (
+                <li key={n.slug}>
+                  <Link
+                    href={`/${n.state_slug}/${n.city_slug}/near/${n.slug}`}
+                    className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                  >
+                    <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-teal-700">
+                      <MapPinIcon className="h-3 w-3" />
+                      {n.city}
+                    </p>
+                    <p className="mt-1 font-semibold text-slate-900 group-hover:text-teal-700">
+                      Near {n.name}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">
+                      {n.provider_count.toLocaleString()} providers nearby
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {latestPosts.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                  Latest Articles
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Research-backed guides on cost, treatment, and aftercare.
+                </p>
+              </div>
+              <Link
+                href="/blog"
+                className="hidden text-sm font-medium text-teal-700 transition hover:text-teal-800 sm:inline"
+              >
+                See all articles &rarr;
+              </Link>
+            </div>
+            <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {latestPosts.map((post) => (
+                <li key={post.slug}>
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">
+                      {post.topic}
+                    </p>
+                    <h3 className="mt-2 text-base font-semibold leading-snug text-slate-900 group-hover:text-teal-700">
+                      {post.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+                      {post.description}
+                    </p>
+                    <span className="mt-auto inline-flex items-center gap-1 pt-3 text-sm font-medium text-teal-700">
+                      Read article
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </span>
                   </Link>
                 </li>
               ))}

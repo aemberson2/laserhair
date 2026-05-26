@@ -10,7 +10,7 @@ import {
   getPostSlugs,
   renderPost,
 } from '@/lib/blog';
-import { getAllCitiesForSearch } from '@/lib/data';
+import { getAllCitiesForSearch, getTopCitiesNationwide } from '@/lib/data';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 
 export const revalidate = 3600;
@@ -55,7 +55,10 @@ export default async function BlogPostPage({
   const rendered = await renderPost(post);
   const allPosts = getAllPosts();
   const related = allPosts.filter((p) => post.relatedPosts.includes(p.slug));
-  const cities = await getAllCitiesForSearch();
+  const [cities, topCities] = await Promise.all([
+    getAllCitiesForSearch(),
+    getTopCitiesNationwide(6),
+  ]);
   const siteUrl = getSiteUrl();
   const canonicalUrl = `${siteUrl}/blog/${post.slug}`;
 
@@ -161,13 +164,46 @@ export default async function BlogPostPage({
             </section>
           )}
 
+          {topCities.length > 0 && (
+            <section className="mt-12">
+              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+                Browse Providers by City
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Most-searched metros in our directory.
+              </p>
+              <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {topCities.map((c) => (
+                  <li key={`${c.state_code}-${c.city_slug}`}>
+                    <Link
+                      href={`/${c.state_slug}/${c.city_slug}`}
+                      className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition duration-150 hover:border-teal-300 hover:shadow-md"
+                    >
+                      <span>
+                        <span className="font-semibold text-slate-900 group-hover:text-teal-700">
+                          {c.name}
+                        </span>
+                        <span className="ml-1.5 text-sm text-slate-500">
+                          {c.state_code}
+                        </span>
+                      </span>
+                      <span className="text-sm text-slate-500">
+                        {c.provider_count.toLocaleString()} providers
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section className="mt-12 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-rose-50 p-6 sm:p-8">
             <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
               Find Laser Hair Removal Near You
             </h2>
             <p className="mt-2 text-sm text-slate-700">
-              Search by city to see vetted providers, real ratings, and direct
-              booking links.
+              Search by city or zip to see vetted providers, real ratings, and
+              direct booking links.
             </p>
             <div className="mt-2">
               <CitySearchBox cities={cities} />

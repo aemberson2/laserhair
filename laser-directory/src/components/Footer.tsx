@@ -1,8 +1,15 @@
 import Link from 'next/link';
 import { SparklesIcon } from './Icons';
+import { getLatestPosts } from '@/lib/blog';
+import { getTopCitiesNationwide } from '@/lib/data';
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const [topCities, recentPosts] = await Promise.all([
+    getTopCitiesNationwide(10),
+    Promise.resolve(getLatestPosts(5)),
+  ]);
+
   return (
     <footer className="mt-20 border-t border-slate-200 bg-white">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -39,6 +46,52 @@ export function Footer() {
           <FooterLink href="mailto:hello@laserhairnearme.com">Report an Error</FooterLink>
         </FooterColumn>
       </div>
+
+      {(topCities.length > 0 || recentPosts.length > 0) && (
+        <div className="border-t border-slate-200 bg-slate-50">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-2">
+            {topCities.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Top Cities
+                </h3>
+                <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                  {topCities.map((c) => (
+                    <li key={`${c.state_code}-${c.city_slug}`}>
+                      <Link
+                        href={`/${c.state_slug}/${c.city_slug}`}
+                        className="text-slate-700 transition duration-150 hover:text-teal-700"
+                      >
+                        {c.name}, {c.state_code}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {recentPosts.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Latest from the Blog
+                </h3>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  {recentPosts.map((p) => (
+                    <li key={p.slug}>
+                      <Link
+                        href={`/blog/${p.slug}`}
+                        className="text-slate-700 transition duration-150 hover:text-teal-700"
+                      >
+                        {p.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-slate-200">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-slate-500 sm:flex-row">
           <p>&copy; {year} LaserHairNearMe.com</p>

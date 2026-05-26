@@ -17,6 +17,7 @@ import {
   getAllCityParams,
   getCityPageData,
   getNeighborhoodsForCity,
+  getTopCitiesNationwide,
   type CityPageData,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
@@ -83,7 +84,13 @@ export default async function CityPage({
   const categories = topCategories(providers);
   const top = providers[0];
   const cityBlogPosts = getPostsForCity(city.slug);
-  const neighborhoods = await getNeighborhoodsForCity(city.slug);
+  const [neighborhoods, topCitiesAll] = await Promise.all([
+    getNeighborhoodsForCity(city.slug),
+    getTopCitiesNationwide(12),
+  ]);
+  const popularCitiesNationwide = topCitiesAll
+    .filter((c) => c.city_slug !== city.slug)
+    .slice(0, 10);
 
   const faqs: { q: string; a: string }[] = [
     {
@@ -326,6 +333,32 @@ export default async function CityPage({
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-teal-300 hover:text-teal-700"
                 >
                   {c.name}
+                  <span className="text-slate-400">
+                    {c.provider_count.toLocaleString()}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {popularCitiesNationwide.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Popular Cities Nationwide
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Looking elsewhere? These are the most-searched cities in our directory.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {popularCitiesNationwide.map((c) => (
+              <li key={`${c.state_code}-${c.city_slug}`}>
+                <Link
+                  href={`/${c.state_slug}/${c.city_slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-teal-300 hover:text-teal-700"
+                >
+                  {c.name}, {c.state_code}
                   <span className="text-slate-400">
                     {c.provider_count.toLocaleString()}
                   </span>

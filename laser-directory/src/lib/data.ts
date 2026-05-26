@@ -263,6 +263,144 @@ export type StatePageData = {
   avgRating: number | null;
 };
 
+export type TopCityLite = {
+  name: string;
+  state_code: string;
+  state_slug: string;
+  city_slug: string;
+  provider_count: number;
+  avg_rating: number | null;
+};
+
+export async function getTopCitiesNationwide(limit = 12): Promise<TopCityLite[]> {
+  try {
+    const supabase = getSupabase();
+    const { data: cities, error } = await supabase
+      .from('cities')
+      .select('name, slug, state_code, provider_count, avg_rating')
+      .order('provider_count', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    if (!cities || cities.length === 0) return [];
+    const stateCodes = [...new Set(cities.map((c) => c.state_code))];
+    const { data: states } = await supabase
+      .from('states')
+      .select('code, slug')
+      .in('code', stateCodes);
+    const stateSlugByCode = new Map<string, string>();
+    for (const s of states ?? []) stateSlugByCode.set(s.code, s.slug);
+    return cities
+      .map((c): TopCityLite | null => {
+        const state_slug = stateSlugByCode.get(c.state_code);
+        if (!state_slug) return null;
+        return {
+          name: c.name,
+          state_code: c.state_code,
+          state_slug,
+          city_slug: c.slug,
+          provider_count: c.provider_count,
+          avg_rating: c.avg_rating,
+        };
+      })
+      .filter((c): c is TopCityLite => c !== null);
+  } catch (err) {
+    console.warn('getTopCitiesNationwide failed, returning empty:', err);
+    return [];
+  }
+}
+
+export type TopStateLite = {
+  name: string;
+  code: string;
+  slug: string;
+  provider_count: number;
+  city_count: number;
+};
+
+export async function getTopStatesNationwide(limit = 10): Promise<TopStateLite[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('states')
+      .select('name, code, slug, provider_count, city_count')
+      .order('provider_count', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as TopStateLite[];
+  } catch (err) {
+    console.warn('getTopStatesNationwide failed, returning empty:', err);
+    return [];
+  }
+}
+
+export type FeaturedNeighborhood = {
+  name: string;
+  slug: string;
+  city: string;
+  city_slug: string;
+  state_slug: string;
+  provider_count: number;
+};
+
+export async function getFeaturedNeighborhoods(limit = 6): Promise<FeaturedNeighborhood[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('neighborhoods')
+      .select('name, slug, city, city_slug, state_slug, provider_count')
+      .order('provider_count', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as FeaturedNeighborhood[];
+  } catch (err) {
+    console.warn('getFeaturedNeighborhoods failed, returning empty:', err);
+    return [];
+  }
+}
+
+export type SiblingCity = { name: string; slug: string; provider_count: number };
+
+export async function getSiblingCitiesByStateCode(
+  stateCode: string,
+  excludeCitySlug: string | null,
+  limit = 6,
+): Promise<SiblingCity[]> {
+  try {
+    const supabase = getSupabase();
+    let q = supabase
+      .from('cities')
+      .select('name, slug, provider_count')
+      .eq('state_code', stateCode)
+      .order('provider_count', { ascending: false })
+      .limit(limit + 1);
+    if (excludeCitySlug) q = q.neq('slug', excludeCitySlug);
+    const { data, error } = await q;
+    if (error) throw error;
+    return ((data ?? []) as SiblingCity[]).slice(0, limit);
+  } catch (err) {
+    console.warn(`getSiblingCitiesByStateCode(${stateCode}) failed:`, err);
+    return [];
+  }
+}
+
+export type LookupState = { name: string; code: string; slug: string };
+
+export async function getStatesByCodes(codes: string[]): Promise<LookupState[]> {
+  if (codes.length === 0) return [];
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('states')
+      .select('name, code, slug')
+      .in('code', codes);
+    if (error) throw error;
+    return (data ?? []) as LookupState[];
+  } catch (err) {
+    console.warn('getStatesByCodes failed, returning empty:', err);
+    return [];
+  }
+}
+
 export async function getAllStateSlugs(): Promise<string[]> {
   try {
     const supabase = getSupabase();
@@ -574,7 +712,7 @@ export async function getProviderPageData(
       .neq('slug', provider.slug)
       .order('rating', { ascending: false, nullsFirst: false })
       .order('review_count', { ascending: false })
-      .limit(6);
+      .limit(8);
     if (nearbyErr) throw nearbyErr;
 
     return {
@@ -630,7 +768,7 @@ export async function getCityPageData(
         .eq('state_code', state.code)
         .neq('slug', city.slug)
         .order('provider_count', { ascending: false })
-        .limit(5),
+        .limit(8),
     ]);
 
     if (providersRes.error) throw providersRes.error;
