@@ -290,40 +290,36 @@ export default async function ProviderPage({
             </span>
           </div>
           {hours.some((h) => h.text) ? (
-            <table className="mt-4 w-full text-sm">
-              <tbody className="divide-y divide-slate-100">
-                {hours.map((h) => {
-                  const isToday = h.day === today;
-                  const isClosed = !h.text || /^closed$/i.test(h.text);
-                  return (
-                    <tr
-                      key={h.day}
-                      className={
-                        isToday
-                          ? 'bg-teal-50/60 font-semibold text-slate-900'
-                          : 'text-slate-700'
-                      }
+            <dl className="mt-4 divide-y divide-slate-100 text-sm">
+              {hours.map((h) => {
+                const isToday = h.day === today;
+                const isClosed = !h.text || /^closed$/i.test(h.text);
+                return (
+                  <div
+                    key={h.day}
+                    className={`flex items-center justify-between gap-4 px-2 py-1.5 ${
+                      isToday ? 'rounded-md bg-teal-50/70 font-semibold text-slate-900' : ''
+                    }`}
+                  >
+                    <dt className={isToday ? 'text-slate-900' : 'text-slate-700'}>
+                      {h.day}
+                      {isToday && (
+                        <span className="ml-1.5 text-xs font-medium text-teal-700">
+                          Today
+                        </span>
+                      )}
+                    </dt>
+                    <dd
+                      className={`text-right tabular-nums ${
+                        isClosed ? 'text-slate-400' : 'text-slate-900'
+                      }`}
                     >
-                      <td className="rounded-l-md py-2 pl-2 pr-4">
-                        {h.day}
-                        {isToday && (
-                          <span className="ml-1.5 text-xs font-medium text-teal-700">
-                            Today
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className={`rounded-r-md py-2 pr-2 text-right ${
-                          isClosed ? 'text-slate-400' : 'text-slate-900'
-                        }`}
-                      >
-                        {h.text || 'Closed'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      {h.text || 'Closed'}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
           ) : (
             <p className="mt-3 text-sm text-slate-500">Hours not available.</p>
           )}
@@ -371,24 +367,21 @@ export default async function ProviderPage({
         </section>
       )}
 
-      <section className="mt-12 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm sm:p-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+      <section className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-teal-300">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Are you a provider?
             </p>
-            <h2 className="mt-1 text-xl font-bold sm:text-2xl">
-              Claim this listing
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Get featured placement, add photos, respond to inquiries, and
-              track your performance.
+            <p className="mt-1 text-base font-semibold text-slate-900">
+              Claim this listing to add photos, respond to inquiries, and track
+              performance.
             </p>
           </div>
           <ClaimListingButton
             providerName={provider.name}
             providerSlug={provider.slug}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 sm:whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 sm:whitespace-nowrap"
           />
         </div>
       </section>

@@ -67,16 +67,16 @@ export default async function Home() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 -top-32 h-64 bg-gradient-to-b from-teal-100/50 to-transparent blur-3xl"
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 text-center sm:py-24">
+        <div className="relative mx-auto max-w-6xl px-4 py-12 text-center sm:py-20">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white/70 px-3 py-1 text-xs font-medium text-teal-700 shadow-sm backdrop-blur">
             <CheckBadgeIcon className="h-3.5 w-3.5" />
             Trusted by {providersStr} providers nationwide
           </div>
-          <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:mt-5 sm:text-5xl md:text-6xl">
             Find Laser Hair Removal
             <span className="block text-teal-700">Near You</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base text-slate-600 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 sm:mt-5 sm:text-lg">
             Compare {providersStr} providers across {citiesStr} cities. Real ratings,
             real reviews, real bookings — all in one place.
           </p>

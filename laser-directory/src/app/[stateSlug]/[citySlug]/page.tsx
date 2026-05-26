@@ -156,22 +156,22 @@ export default async function CityPage({
       <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center sm:rounded-2xl sm:border sm:border-teal-200 sm:bg-gradient-to-br sm:from-teal-50 sm:to-rose-50 sm:p-5">
         <div className="rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-rose-50 p-5 sm:border-0 sm:bg-none sm:p-0">
           <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">
-            Get matched
+            Not sure where to start?
           </p>
           <h2 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
-            Connect with top-rated providers in {city.name}
+            See pricing from multiple {city.name} providers
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Tell us what you&apos;re looking for and we&apos;ll match you with vetted
-            clinics. Free, no obligation.
+            Share what you&apos;d like treated and we&apos;ll send a short list of
+            providers nearby with their pricing and availability.
           </p>
         </div>
         <QuoteButton
           variant="primary"
-          label="Get a Free Quote"
+          label="Compare Quotes"
           city={city.name}
           stateCode={state.code}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 sm:whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 sm:whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
         />
       </section>
 

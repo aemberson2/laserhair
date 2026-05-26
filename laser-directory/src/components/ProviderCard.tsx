@@ -65,8 +65,8 @@ export function ProviderCard({
   const phoneHref = provider.phone ? `tel:${digitsOnly(provider.phone)}` : null;
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-lg">
-      <div className="flex flex-col sm:flex-row">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-lg">
+      <div className="flex flex-1 flex-col sm:flex-row">
         <div className="sm:w-48 sm:shrink-0">
           {provider.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -120,7 +120,7 @@ export function ProviderCard({
           {provider.address && (
             <p className="flex items-start gap-1.5 text-sm text-slate-600">
               <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-              <span>{provider.address}</span>
+              <span className="line-clamp-2">{provider.address}</span>
             </p>
           )}
 
@@ -151,7 +151,7 @@ export function ProviderCard({
             </ul>
           )}
 
-          <div className="mt-1 flex flex-wrap gap-2">
+          <div className="mt-auto flex flex-wrap gap-2 pt-1">
             <QuoteButton
               variant="subtle"
               providerName={provider.name}

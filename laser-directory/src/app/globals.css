@@ -9,6 +9,8 @@
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Sticky header is 60px tall — leave room when jumping to in-page anchors. */
+  scroll-padding-top: 4.5rem;
 }
 
 img,
@@ -17,11 +19,24 @@ video {
   height: auto;
 }
 
+/* Visible focus ring on every keyboard-focused interactive element. */
+:focus-visible {
+  outline: 2px solid rgb(20 184 166); /* teal-500 */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Buttons and links that already carry their own visual treatment shouldn't
+   double up — they keep the focus ring but skip the offset/extra radius. */
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 3px;
+}
+
 /* Blog post content styles — rendered from markdown by remark-html. */
 .post-content {
   color: rgb(51 65 85); /* slate-700 */
-  font-size: 1rem;
-  line-height: 1.75;
+  font-size: 1.0625rem; /* 17px — easier reading at 680px width */
+  line-height: 1.7;
 }
 .post-content > * + * {
   margin-top: 1em;

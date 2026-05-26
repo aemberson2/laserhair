@@ -76,21 +76,26 @@ export function ProviderListFilters({
 
   return (
     <div>
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <Pill label="All ratings" active={minRating === 0} onClick={() => setMinRating(0)} />
-          <Pill label="4+ stars" active={minRating === 4} onClick={() => setMinRating(4)} />
-          <Pill label="4.5+ stars" active={minRating === 4.5} onClick={() => setMinRating(4.5)} />
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+          <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Rating
+          </span>
+          <Pill label="All" active={minRating === 0} onClick={() => setMinRating(0)} size="sm" />
+          <Pill label="4+" active={minRating === 4} onClick={() => setMinRating(4)} size="sm" />
+          <Pill label="4.5+" active={minRating === 4.5} onClick={() => setMinRating(4.5)} size="sm" />
           <span aria-hidden="true" className="mx-1 hidden h-5 w-px bg-slate-200 sm:inline-block" />
           <Pill
-            label="Laser Specialists Only"
+            label="Laser Specialists"
             active={specialistOnly}
             onClick={toggleSpecialist}
+            size="sm"
           />
           <Pill
             label="Online Booking"
             active={onlineBookingOnly}
             onClick={toggleOnlineBooking}
+            size="sm"
           />
         </div>
 
@@ -176,7 +181,7 @@ function Pill({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full ${padding} text-sm font-medium transition duration-150 ease-out ${
+      className={`rounded-full ${padding} text-sm font-medium transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${
         active
           ? 'bg-teal-600 text-white shadow-sm hover:bg-teal-700'
           : 'border border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:text-teal-700'

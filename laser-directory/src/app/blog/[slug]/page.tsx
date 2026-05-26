@@ -92,8 +92,8 @@ export default async function BlogPostPage({
         ]}
       />
 
-      <article className="mt-5 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_240px]">
-        <div>
+      <article className="mx-auto mt-5 grid max-w-[680px] grid-cols-1 gap-10 lg:max-w-[960px] lg:grid-cols-[minmax(0,680px)_240px]">
+        <div className="min-w-0">
           <header>
             <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">
               {post.topic}
