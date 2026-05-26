@@ -8,6 +8,7 @@ import {
 } from './Icons';
 import { QuoteButton } from './QuoteButton';
 import { StarRating } from './StarRating';
+import { TrackedLink } from './TrackedLink';
 
 export type ProviderCardData = {
   slug: string;
@@ -124,13 +125,17 @@ export function ProviderCard({
           )}
 
           {phoneHref && (
-            <a
+            <TrackedLink
+              providerSlug={provider.slug}
+              clickType="call"
+              city={context?.city}
+              stateCode={context?.stateCode}
               href={phoneHref}
               className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-teal-700 transition hover:text-teal-800"
             >
               <PhoneIcon className="h-4 w-4" />
               {provider.phone}
-            </a>
+            </TrackedLink>
           )}
 
           {tags.length > 0 && (
@@ -155,26 +160,38 @@ export function ProviderCard({
               stateCode={context?.stateCode}
             />
             {provider.booking_url && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="booking"
+                city={context?.city}
+                stateCode={context?.stateCode}
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
               >
                 Book Now
-              </a>
+              </TrackedLink>
             )}
             {phoneHref && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="call"
+                city={context?.city}
+                stateCode={context?.stateCode}
                 href={phoneHref}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 px-3.5 py-2 text-sm font-semibold text-teal-700 transition duration-150 ease-out hover:bg-teal-50"
               >
                 <PhoneIcon className="h-4 w-4" />
                 Call
-              </a>
+              </TrackedLink>
             )}
             {provider.website && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="website"
+                city={context?.city}
+                stateCode={context?.stateCode}
                 href={provider.website}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -182,7 +199,7 @@ export function ProviderCard({
               >
                 <GlobeIcon className="h-4 w-4" />
                 Website
-              </a>
+              </TrackedLink>
             )}
           </div>
         </div>

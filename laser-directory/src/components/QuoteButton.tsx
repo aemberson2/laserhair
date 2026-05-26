@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { CheckBadgeIcon } from './Icons';
 import { Modal } from './Modal';
 import { submitLead } from '@/lib/actions/leads';
+import { trackClick } from '@/lib/actions/tracking';
 
 type TreatmentArea =
   | ''
@@ -62,11 +63,23 @@ export function QuoteButton({
           ? 'bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200 hover:bg-teal-100'
           : 'text-teal-700 hover:text-teal-800 hover:underline';
 
+  const handleOpen = () => {
+    if (providerSlug) {
+      trackClick({
+        providerSlug,
+        clickType: 'quote',
+        city,
+        stateCode,
+      });
+    }
+    setOpen(true);
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className={className ?? `${base} ${variantClass}`}
       >
         {label}

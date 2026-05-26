@@ -16,6 +16,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { ProviderCard } from '@/components/ProviderCard';
 import { QuoteButton } from '@/components/QuoteButton';
 import { StarRating } from '@/components/StarRating';
+import { TrackedLink } from '@/components/TrackedLink';
 import {
   getAllProviderParams,
   getProviderPageData,
@@ -177,26 +178,38 @@ export default async function ProviderPage({
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
             />
             {provider.booking_url && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="booking"
+                city={city.name}
+                stateCode={state.code}
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 py-3 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
               >
                 Book Appointment
-              </a>
+              </TrackedLink>
             )}
             {phoneDigits && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="call"
+                city={city.name}
+                stateCode={state.code}
                 href={`tel:${phoneDigits}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
               >
                 <PhoneIcon className="h-4 w-4" />
                 Call Now
-              </a>
+              </TrackedLink>
             )}
             {provider.website && (
-              <a
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="website"
+                city={city.name}
+                stateCode={state.code}
                 href={provider.website}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -204,7 +217,7 @@ export default async function ProviderPage({
               >
                 <GlobeIcon className="h-4 w-4" />
                 Visit Website
-              </a>
+              </TrackedLink>
             )}
           </div>
         </aside>
@@ -216,24 +229,32 @@ export default async function ProviderPage({
           <ul className="mt-4 space-y-3 text-sm">
             {provider.phone && (
               <ContactRow icon={<PhoneIcon className="h-4 w-4" />}>
-                <a
+                <TrackedLink
+                  providerSlug={provider.slug}
+                  clickType="call"
+                  city={city.name}
+                  stateCode={state.code}
                   href={`tel:${phoneDigits}`}
                   className="font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   {provider.phone}
-                </a>
+                </TrackedLink>
               </ContactRow>
             )}
             {provider.website && (
               <ContactRow icon={<GlobeIcon className="h-4 w-4" />}>
-                <a
+                <TrackedLink
+                  providerSlug={provider.slug}
+                  clickType="website"
+                  city={city.name}
+                  stateCode={state.code}
                   href={provider.website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="break-all font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   {provider.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                </a>
+                </TrackedLink>
               </ContactRow>
             )}
             {provider.address && (
@@ -243,14 +264,18 @@ export default async function ProviderPage({
             )}
             {provider.google_maps_url && (
               <ContactRow icon={<MapPinIcon className="h-4 w-4" />}>
-                <a
+                <TrackedLink
+                  providerSlug={provider.slug}
+                  clickType="directions"
+                  city={city.name}
+                  stateCode={state.code}
                   href={provider.google_maps_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-teal-700 transition hover:text-teal-800"
                 >
                   Open in Google Maps
-                </a>
+                </TrackedLink>
               </ContactRow>
             )}
           </ul>
