@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 type ModalProps = {
   open: boolean;
@@ -12,6 +13,7 @@ type ModalProps = {
 
 export function Modal({ open, onClose, title, subtitle, children }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -19,23 +21,34 @@ export function Modal({ open, onClose, title, subtitle, children }: ModalProps) 
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKey);
+
+    // Lock body scroll, compensate for scrollbar width to avoid layout shift.
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     dialogRef.current?.focus();
+
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
     };
   }, [open, onClose]);
 
   if (!open) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      aria-labelledby={titleId}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -43,11 +56,11 @@ export function Modal({ open, onClose, title, subtitle, children }: ModalProps) 
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="w-full max-w-lg overflow-hidden rounded-t-2xl bg-white shadow-2xl outline-none transition-all sm:rounded-2xl"
+        className="flex max-h-[90vh] w-full max-w-[500px] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl outline-none sm:rounded-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-gradient-to-br from-teal-50 to-rose-50 px-6 py-5">
           <div>
-            <h2 id="modal-title" className="text-lg font-bold text-slate-900">
+            <h2 id={titleId} className="text-lg font-bold text-slate-900">
               {title}
             </h2>
             {subtitle && (
@@ -74,8 +87,9 @@ export function Modal({ open, onClose, title, subtitle, children }: ModalProps) 
             </svg>
           </button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
