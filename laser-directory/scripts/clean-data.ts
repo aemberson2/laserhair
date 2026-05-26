@@ -65,7 +65,31 @@ const REMOVE_CATEGORIES = new Set([
 ]);
 
 // Keywords on subtypes that hint a REVIEW provider probably does offer laser.
-const HINT_KEYWORDS = ['laser', 'skin', 'dermatology', 'dermatologist', 'cosmetic', 'aesthetic'];
+const SUBTYPE_HINT_KEYWORDS = [
+  'laser',
+  'skin',
+  'dermatology',
+  'dermatologist',
+  'cosmetic',
+  'aesthetic',
+];
+
+// Keywords in the provider name that hint at laser/medspa/aesthetics.
+// Broader than the subtype list because business names often signal niche
+// even when Outscraper's subtypes are generic.
+const NAME_HINT_KEYWORDS = [
+  'laser',
+  'skin',
+  'derm',
+  'cosmetic',
+  'aesthetic',
+  'medspa',
+  'med spa',
+  'beauty',
+  'glow',
+  'smooth',
+  'bare',
+];
 
 type Provider = {
   id: string;
@@ -98,11 +122,16 @@ function classify(p: Provider): { bucket: Bucket; hint?: string } {
     return { bucket: 'REMOVE' };
   }
 
-  // REVIEW — surface hint if any subtype contains a relevant keyword
-  const hintMatches = subtypes
+  // REVIEW — surface hint if any subtype or the name contains a relevant keyword
+  const subtypeMatches = subtypes
     .map((s) => s.toLowerCase())
-    .filter((s) => HINT_KEYWORDS.some((kw) => s.includes(kw)));
-  const hint = hintMatches.length > 0 ? hintMatches.slice(0, 2).join(', ') : undefined;
+    .filter((s) => SUBTYPE_HINT_KEYWORDS.some((kw) => s.includes(kw)));
+  const nameMatches = NAME_HINT_KEYWORDS.filter((kw) => nameLower.includes(kw));
+
+  const parts: string[] = [];
+  if (subtypeMatches.length > 0) parts.push(subtypeMatches.slice(0, 2).join(', '));
+  if (nameMatches.length > 0) parts.push(`name: ${nameMatches.slice(0, 3).join(', ')}`);
+  const hint = parts.length > 0 ? parts.join(' | ') : undefined;
   return { bucket: 'REVIEW', hint };
 }
 
