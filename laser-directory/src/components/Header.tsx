@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { SparklesIcon } from './Icons';
+import { MobileNav } from './MobileNav';
 
 export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2.5 sm:py-3.5">
         <Link
           href="/"
           className="group flex items-center gap-2 text-slate-900 transition duration-150 hover:text-teal-700"
@@ -16,7 +17,7 @@ export function Header() {
             LaserHair<span className="text-teal-600">NearMe</span>
           </span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2 text-sm">
+        <nav className="hidden items-center gap-1 text-sm lg:flex">
           <Link
             href="/states"
             className="rounded-md px-2.5 py-1.5 text-slate-700 transition duration-150 hover:bg-slate-50 hover:text-teal-700"
@@ -35,7 +36,14 @@ export function Header() {
           >
             About
           </Link>
+          <Link
+            href="/for-providers"
+            className="ml-2 rounded-lg bg-slate-900 px-3 py-1.5 text-white shadow-sm transition hover:bg-slate-800"
+          >
+            For Providers
+          </Link>
         </nav>
+        <MobileNav />
       </div>
     </header>
   );

@@ -11,6 +11,10 @@ body {
   -webkit-font-smoothing: antialiased;
   /* Sticky header is 60px tall — leave room when jumping to in-page anchors. */
   scroll-padding-top: 4.5rem;
+  /* Belt-and-braces: nothing should bust the viewport width on mobile. Using
+     'clip' instead of 'hidden' so it doesn't disable position: sticky on the
+     header. */
+  overflow-x: clip;
 }
 
 img,
@@ -35,8 +39,19 @@ a:focus-visible {
 /* Blog post content styles — rendered from markdown by remark-html. */
 .post-content {
   color: rgb(51 65 85); /* slate-700 */
-  font-size: 1.0625rem; /* 17px — easier reading at 680px width */
+  font-size: 1rem; /* 16px on mobile — accessibility floor */
   line-height: 1.7;
+}
+@media (min-width: 640px) {
+  .post-content {
+    font-size: 1.0625rem; /* 17px on tablet+ */
+  }
+}
+/* Long markdown tables should scroll horizontally on mobile rather than
+   pushing the layout. Wrap in a scroll container automatically. */
+.post-content table {
+  display: block;
+  overflow-x: auto;
 }
 .post-content > * + * {
   margin-top: 1em;

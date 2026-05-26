@@ -151,14 +151,7 @@ export function ProviderCard({
             </ul>
           )}
 
-          <div className="mt-auto flex flex-wrap gap-2 pt-1">
-            <QuoteButton
-              variant="subtle"
-              providerName={provider.name}
-              providerSlug={provider.slug}
-              city={context?.city}
-              stateCode={context?.stateCode}
-            />
+          <div className="mt-auto grid grid-cols-1 gap-2 pt-1 sm:flex sm:flex-wrap">
             {provider.booking_url && (
               <TrackedLink
                 providerSlug={provider.slug}
@@ -168,11 +161,19 @@ export function ProviderCard({
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700 sm:h-auto sm:w-auto sm:py-2"
               >
                 Book Now
               </TrackedLink>
             )}
+            <QuoteButton
+              variant="subtle"
+              providerName={provider.name}
+              providerSlug={provider.slug}
+              city={context?.city}
+              stateCode={context?.stateCode}
+              className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-teal-50 px-4 text-sm font-semibold text-teal-700 ring-1 ring-inset ring-teal-200 transition hover:bg-teal-100 sm:h-auto sm:w-auto sm:py-2"
+            />
             {phoneHref && (
               <TrackedLink
                 providerSlug={provider.slug}
@@ -180,7 +181,7 @@ export function ProviderCard({
                 city={context?.city}
                 stateCode={context?.stateCode}
                 href={phoneHref}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-teal-600 px-3.5 py-2 text-sm font-semibold text-teal-700 transition duration-150 ease-out hover:bg-teal-50"
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-teal-600 px-4 text-sm font-semibold text-teal-700 transition duration-150 ease-out hover:bg-teal-50 sm:h-auto sm:w-auto sm:py-2"
               >
                 <PhoneIcon className="h-4 w-4" />
                 Call
@@ -195,7 +196,7 @@ export function ProviderCard({
                 href={provider.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition duration-150 ease-out hover:border-slate-400 hover:bg-slate-50"
+                className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition duration-150 ease-out hover:border-slate-400 hover:bg-slate-50 sm:h-auto sm:w-auto sm:py-2"
               >
                 <GlobeIcon className="h-4 w-4" />
                 Website

@@ -15,6 +15,10 @@ export type DayHours = {
   text: string | null;
 };
 
+export function shortDay(d: DayName): string {
+  return d.slice(0, 3);
+}
+
 export function parseWorkingHours(raw: unknown): DayHours[] {
   const map = new Map<string, string>();
 

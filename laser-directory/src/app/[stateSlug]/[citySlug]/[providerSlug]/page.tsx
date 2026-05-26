@@ -29,6 +29,7 @@ import {
   currentDayInTimezone,
   isOpenNow,
   parseWorkingHours,
+  shortDay,
 } from '@/lib/hours';
 import { getSiteUrl } from '@/lib/site';
 
@@ -173,6 +174,19 @@ export default async function ProviderPage({
           />
 
           <div className="flex flex-col gap-2">
+            {phoneDigits && (
+              <TrackedLink
+                providerSlug={provider.slug}
+                clickType="call"
+                city={city.name}
+                stateCode={state.code}
+                href={`tel:${phoneDigits}`}
+                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 text-base font-semibold text-white shadow-sm transition duration-150 hover:bg-teal-700"
+              >
+                <PhoneIcon className="h-5 w-5" />
+                <span>Call {provider.phone}</span>
+              </TrackedLink>
+            )}
             <QuoteButton
               variant="primary"
               label="Get a Free Quote"
@@ -180,7 +194,7 @@ export default async function ProviderPage({
               providerSlug={provider.slug}
               city={city.name}
               stateCode={state.code}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-50 px-4 text-sm font-semibold text-teal-700 ring-1 ring-inset ring-teal-200 transition hover:bg-teal-100"
             />
             {provider.booking_url && (
               <TrackedLink
@@ -191,22 +205,9 @@ export default async function ProviderPage({
                 href={provider.booking_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 py-3 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-teal-600 px-4 text-sm font-semibold text-teal-700 transition duration-150 hover:bg-teal-50"
               >
                 Book Appointment
-              </TrackedLink>
-            )}
-            {phoneDigits && (
-              <TrackedLink
-                providerSlug={provider.slug}
-                clickType="call"
-                city={city.name}
-                stateCode={state.code}
-                href={`tel:${phoneDigits}`}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
-              >
-                <PhoneIcon className="h-4 w-4" />
-                Call Now
               </TrackedLink>
             )}
             {provider.website && (
@@ -218,7 +219,7 @@ export default async function ProviderPage({
                 href={provider.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition duration-150 hover:border-slate-400 hover:bg-slate-50"
               >
                 <GlobeIcon className="h-4 w-4" />
                 Visit Website
@@ -307,7 +308,8 @@ export default async function ProviderPage({
                     }`}
                   >
                     <dt className={isToday ? 'text-slate-900' : 'text-slate-700'}>
-                      {h.day}
+                      <span className="sm:hidden">{shortDay(h.day)}</span>
+                      <span className="hidden sm:inline">{h.day}</span>
                       {isToday && (
                         <span className="ml-1.5 text-xs font-medium text-teal-700">
                           Today
@@ -534,8 +536,10 @@ function ReviewBreakdown({ provider }: { provider: ProviderFull }) {
                 style={{ width: `${widthPct}%` }}
               />
             </div>
-            <span className="w-20 text-right tabular-nums text-slate-500">
-              {count.toLocaleString()} ({sharePct}%)
+            <span className="w-16 text-right tabular-nums text-xs text-slate-500 sm:w-20 sm:text-sm">
+              {count.toLocaleString()}
+              <span className="hidden sm:inline"> ({sharePct}%)</span>
+              <span className="ml-1 text-slate-400 sm:hidden">·{sharePct}%</span>
             </span>
           </div>
         );

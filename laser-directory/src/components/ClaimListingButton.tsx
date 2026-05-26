@@ -192,18 +192,18 @@ function ClaimForm({
         </p>
       )}
 
-      <div className="flex justify-end gap-2">
+      <div className="sticky -bottom-6 -mx-6 mt-2 flex flex-col-reverse gap-2 border-t border-slate-100 bg-white px-6 pb-6 pt-4 sm:static sm:m-0 sm:flex-row sm:justify-end sm:border-0 sm:p-0">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+          className="inline-flex h-12 items-center justify-center rounded-lg px-4 text-sm font-medium text-slate-600 hover:text-slate-900 sm:h-10"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-slate-900 px-4 text-base font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 sm:h-10 sm:w-auto sm:text-sm"
         >
           {isPending ? 'Submitting…' : 'Send Claim Request'}
         </button>
@@ -213,7 +213,7 @@ function ClaimForm({
 }
 
 const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20';
+  'block w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:text-sm sm:py-2.5';
 
 function Field({
   id,

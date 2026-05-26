@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, subtitle, children }: ModalProps) 
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="flex max-h-[90vh] w-full max-w-[500px] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl outline-none sm:rounded-2xl"
+        className="flex max-h-[92vh] w-full max-w-[500px] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl outline-none sm:max-h-[90vh] sm:rounded-2xl"
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-gradient-to-br from-teal-50 to-rose-50 px-6 py-5">
           <div>

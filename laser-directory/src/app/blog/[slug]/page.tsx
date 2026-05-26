@@ -113,19 +113,27 @@ export default async function BlogPostPage({
           </header>
 
           {rendered.toc.length > 1 && (
-            <nav
-              aria-label="Table of contents"
-              className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:hidden"
-            >
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                In this article
-              </p>
-              <ol className="mt-3 space-y-1.5 text-sm">
+            <details className="group mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+              <summary
+                aria-label="Table of contents"
+                className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-slate-900"
+              >
+                <span>In this article ({rendered.toc.length})</span>
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-50 text-teal-700 transition duration-150 group-open:rotate-180"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </span>
+              </summary>
+              <ol className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-sm">
                 {rendered.toc.map((item, i) => (
                   <li key={item.id}>
                     <a
                       href={`#${item.id}`}
-                      className="flex gap-2 text-slate-700 transition hover:text-teal-700"
+                      className="flex min-h-[36px] items-center gap-2 text-slate-700 transition hover:text-teal-700"
                     >
                       <span className="text-slate-400">{i + 1}.</span>
                       <span>{item.text}</span>
@@ -133,7 +141,7 @@ export default async function BlogPostPage({
                   </li>
                 ))}
               </ol>
-            </nav>
+            </details>
           )}
 
           <div
