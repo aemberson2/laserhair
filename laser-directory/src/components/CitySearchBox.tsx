@@ -10,26 +10,69 @@ type Props = {
   cities: CitySearchEntry[];
 };
 
+type SearchResult = CitySearchEntry & {
+  providerCount?: number;
+  matchedPostal?: string;
+};
+
+const ZIP_PATTERN = /^\d{3,5}(-\d{0,4})?$/;
+
 export function CitySearchBox({ cities }: Props) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [zipResults, setZipResults] = useState<SearchResult[]>([]);
+  const [zipLoading, setZipLoading] = useState(false);
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    const startsWith: CitySearchEntry[] = [];
-    const contains: CitySearchEntry[] = [];
+  const q = query.trim();
+  const isZipQuery = ZIP_PATTERN.test(q);
+
+  // Fire a debounced API search when the user types a zip code.
+  useEffect(() => {
+    if (!isZipQuery) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      setZipLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        if (!res.ok) throw new Error('search failed');
+        const data = (await res.json()) as SearchResult[];
+        if (!cancelled) setZipResults(data);
+      } catch {
+        if (!cancelled) setZipResults([]);
+      } finally {
+        if (!cancelled) setZipLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [q, isZipQuery]);
+
+  // Client-side city name matching (kept fast, no network).
+  const textSuggestions = useMemo<SearchResult[]>(() => {
+    if (isZipQuery || q.length < 2) return [];
+    const lower = q.toLowerCase();
+    const startsWith: SearchResult[] = [];
+    const contains: SearchResult[] = [];
     for (const c of cities) {
       const name = c.name.toLowerCase();
-      if (name.startsWith(q)) startsWith.push(c);
-      else if (name.includes(q)) contains.push(c);
+      if (name.startsWith(lower)) startsWith.push(c);
+      else if (name.includes(lower)) contains.push(c);
       if (startsWith.length >= 8) break;
     }
     return [...startsWith, ...contains].slice(0, 8);
-  }, [query, cities]);
+  }, [cities, isZipQuery, q]);
+
+  const suggestions: SearchResult[] = isZipQuery ? zipResults : textSuggestions;
+  const showLoading = isZipQuery && zipLoading && zipResults.length === 0;
+  const hasResults = open && suggestions.length > 0;
+  const noResults =
+    open && !showLoading && q.length >= 2 && suggestions.length === 0;
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -39,7 +82,7 @@ export function CitySearchBox({ cities }: Props) {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const navigateTo = (c: CitySearchEntry) => {
+  const navigateTo = (c: SearchResult) => {
     router.push(`/${c.stateSlug}/${c.citySlug}`);
     setOpen(false);
   };
@@ -60,9 +103,6 @@ export function CitySearchBox({ cities }: Props) {
     }
   };
 
-  const hasResults = open && suggestions.length > 0;
-  const noResults = open && query.trim().length >= 2 && suggestions.length === 0;
-
   return (
     <div
       ref={containerRef}
@@ -78,6 +118,7 @@ export function CitySearchBox({ cities }: Props) {
           type="text"
           role="combobox"
           autoComplete="off"
+          inputMode={isZipQuery || /^\d/.test(q) ? 'numeric' : 'text'}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -92,6 +133,11 @@ export function CitySearchBox({ cities }: Props) {
           aria-controls="city-search-listbox"
           className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-base text-slate-900 shadow-sm placeholder:text-slate-400 transition duration-150 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
         />
+        {showLoading && (
+          <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xl">
+            Searching for providers near {q}…
+          </div>
+        )}
         {hasResults && (
           <ul
             id="city-search-listbox"
@@ -99,7 +145,11 @@ export function CitySearchBox({ cities }: Props) {
             className="absolute left-0 right-0 top-full z-10 mt-2 max-h-80 overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"
           >
             {suggestions.map((c, i) => (
-              <li key={`${c.stateCode}-${c.citySlug}`} role="option" aria-selected={i === highlight}>
+              <li
+                key={`${c.stateCode}-${c.citySlug}`}
+                role="option"
+                aria-selected={i === highlight}
+              >
                 <button
                   type="button"
                   onMouseDown={(e) => {
@@ -115,6 +165,12 @@ export function CitySearchBox({ cities }: Props) {
                 >
                   <span className="font-medium">{c.name}</span>
                   <span className="ml-2 text-slate-500">{c.stateCode}</span>
+                  {typeof c.providerCount === 'number' && (
+                    <span className="ml-2 text-slate-500">
+                      {c.matchedPostal && `(${c.matchedPostal} area) — `}
+                      {c.providerCount} {c.providerCount === 1 ? 'provider' : 'providers'}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
@@ -122,13 +178,15 @@ export function CitySearchBox({ cities }: Props) {
         )}
         {noResults && (
           <div className="absolute left-0 right-0 top-full z-10 mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-xl">
-            No cities match &ldquo;{query}&rdquo;.
+            {isZipQuery
+              ? `No providers found near ${q}. Try a city name instead.`
+              : `No cities match "${q}".`}
           </div>
         )}
       </div>
       <Link
         href="/states"
-        className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-6 py-3.5 text-center text-base font-medium text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700"
+        className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-6 py-3.5 text-center text-base font-medium text-white shadow-sm transition duration-150 ease-out hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
       >
         Browse by State
       </Link>
