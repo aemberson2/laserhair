@@ -24,6 +24,7 @@ export function Footer() {
         <FooterColumn title="Browse">
           <FooterLink href="/states">All States</FooterLink>
           <FooterLink href="/">Top Cities</FooterLink>
+          <FooterLink href="/blog">Blog</FooterLink>
         </FooterColumn>
 
         <FooterColumn title="Company">

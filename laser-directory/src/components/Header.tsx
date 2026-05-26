@@ -24,6 +24,12 @@ export function Header() {
             Browse by State
           </Link>
           <Link
+            href="/blog"
+            className="rounded-md px-2.5 py-1.5 text-slate-700 transition duration-150 hover:bg-slate-50 hover:text-teal-700"
+          >
+            Blog
+          </Link>
+          <Link
             href="/about"
             className="rounded-md px-2.5 py-1.5 text-slate-700 transition duration-150 hover:bg-slate-50 hover:text-teal-700"
           >

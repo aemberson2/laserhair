@@ -4,12 +4,14 @@ import { notFound } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import {
   CheckBadgeIcon,
+  ChevronRightIcon,
   PlusIcon,
   StarIcon,
 } from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
 import { ProviderListFilters } from '@/components/ProviderListFilters';
 import { StickyMobileCTA } from '@/components/StickyMobileCTA';
+import { getPostsForCity } from '@/lib/blog';
 import {
   getAllCityParams,
   getCityPageData,
@@ -78,6 +80,7 @@ export default async function CityPage({
     providers.length > 0 ? Math.round((withBooking / providers.length) * 100) : 0;
   const categories = topCategories(providers);
   const top = providers[0];
+  const cityBlogPosts = getPostsForCity(city.slug);
 
   const faqs: { q: string; a: string }[] = [
     {
@@ -210,6 +213,41 @@ export default async function CityPage({
           ))}
         </div>
       </section>
+
+      {cityBlogPosts.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Related Articles
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Research-backed guides relevant to laser hair removal in {city.name}.
+          </p>
+          <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cityBlogPosts.slice(0, 6).map((post) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-teal-700">
+                    {post.topic}
+                  </p>
+                  <h3 className="mt-2 text-base font-semibold leading-snug text-slate-900 group-hover:text-teal-700">
+                    {post.title}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                    {post.description}
+                  </p>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-sm font-medium text-teal-700">
+                    Read article
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {nearbyCities.length > 0 && (
         <section className="mt-14">
