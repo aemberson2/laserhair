@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import {
   CheckBadgeIcon,
@@ -18,6 +18,7 @@ import {
   getCityPageData,
   getNeighborhoodsForCity,
   getTopCitiesNationwide,
+  stateExists,
   type CityPageData,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
@@ -74,7 +75,14 @@ export default async function CityPage({
 }) {
   const { stateSlug, citySlug } = await params;
   const data = await getCityPageData(stateSlug, citySlug);
-  if (!data) notFound();
+  if (!data) {
+    // Cities dropped to zero providers get deleted by the cleanup script;
+    // permanently redirect their URL to the state page instead of 404ing.
+    if (await stateExists(stateSlug)) {
+      permanentRedirect(`/${stateSlug}`);
+    }
+    notFound();
+  }
 
   const { state, city, providers, nearbyCities } = data;
   const avg = avgRating(providers);

@@ -413,6 +413,50 @@ export async function getAllStateSlugs(): Promise<string[]> {
   }
 }
 
+// Lightweight existence checks used to permanent-redirect deleted child URLs
+// (e.g. a removed provider page) to their surviving parent instead of 404ing.
+// Both return false on any error, so an unreachable database degrades to the
+// plain 404 path rather than redirecting garbage to the homepage.
+export async function stateExists(stateSlug: string): Promise<boolean> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('states')
+      .select('slug')
+      .eq('slug', stateSlug)
+      .maybeSingle();
+    if (error) throw error;
+    return data !== null;
+  } catch {
+    return false;
+  }
+}
+
+export async function cityExistsUnderState(
+  stateSlug: string,
+  citySlug: string,
+): Promise<boolean> {
+  try {
+    const supabase = getSupabase();
+    const { data: state, error: stateErr } = await supabase
+      .from('states')
+      .select('code')
+      .eq('slug', stateSlug)
+      .maybeSingle();
+    if (stateErr) throw stateErr;
+    if (!state) return false;
+    const { data: city, error: cityErr } = await supabase
+      .from('cities')
+      .select('slug, state_code')
+      .eq('slug', citySlug)
+      .maybeSingle();
+    if (cityErr) throw cityErr;
+    return city !== null && city.state_code === state.code;
+  } catch {
+    return false;
+  }
+}
+
 export type StatesListItem = {
   name: string;
   code: string;

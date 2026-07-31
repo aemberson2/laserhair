@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ChevronRightIcon, MapPinIcon, PlusIcon, StarIcon } from '@/components/Icons';
 import { JsonLd } from '@/components/JsonLd';
@@ -8,9 +8,11 @@ import { ProviderListFilters } from '@/components/ProviderListFilters';
 import { QuoteButton } from '@/components/QuoteButton';
 import { getPostsForProvider } from '@/lib/blog';
 import {
+  cityExistsUnderState,
   getAllNeighborhoodParams,
   getNeighborhoodPageData,
   getSiblingCitiesByStateCode,
+  stateExists,
   type NeighborhoodPageData,
 } from '@/lib/data';
 import { getSiteUrl } from '@/lib/site';
@@ -64,7 +66,15 @@ export default async function NeighborhoodPage({
 }) {
   const { stateSlug, citySlug, neighborhoodSlug } = await params;
   const data = await getNeighborhoodPageData(stateSlug, citySlug, neighborhoodSlug);
-  if (!data) notFound();
+  if (!data) {
+    if (await cityExistsUnderState(stateSlug, citySlug)) {
+      permanentRedirect(`/${stateSlug}/${citySlug}`);
+    }
+    if (await stateExists(stateSlug)) {
+      permanentRedirect(`/${stateSlug}`);
+    }
+    notFound();
+  }
 
   const { neighborhood: n, providers, siblings } = data;
   const avg = avgRating(providers);

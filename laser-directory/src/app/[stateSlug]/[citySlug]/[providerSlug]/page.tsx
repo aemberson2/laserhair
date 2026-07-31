@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import {
   CheckBadgeIcon,
@@ -20,9 +20,11 @@ import { StarRating } from '@/components/StarRating';
 import { TrackedLink } from '@/components/TrackedLink';
 import { getPostsForProvider } from '@/lib/blog';
 import {
+  cityExistsUnderState,
   getAllProviderParams,
   getProviderPageData,
   getSiblingCitiesByStateCode,
+  stateExists,
   type ProviderFull,
 } from '@/lib/data';
 import {
@@ -76,7 +78,17 @@ export default async function ProviderPage({
 }) {
   const { stateSlug, citySlug, providerSlug } = await params;
   const data = await getProviderPageData(stateSlug, citySlug, providerSlug);
-  if (!data) notFound();
+  if (!data) {
+    // Removed providers (e.g. data-cleanup deletions) permanently redirect to
+    // their surviving parent so crawlers consolidate rather than 404.
+    if (await cityExistsUnderState(stateSlug, citySlug)) {
+      permanentRedirect(`/${stateSlug}/${citySlug}`);
+    }
+    if (await stateExists(stateSlug)) {
+      permanentRedirect(`/${stateSlug}`);
+    }
+    notFound();
+  }
 
   const { state, city, provider, nearby } = data;
   const siblingCities = await getSiblingCitiesByStateCode(state.code, city.slug, 6);
